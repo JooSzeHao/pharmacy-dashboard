@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacy Queue — HSIS Serdang</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&family=Noto+Sans:wght@300;400;500;600;700&family=Noto+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --primary:     #0891B2;
+    --primary-lt:  #22D3EE;
+    --primary-dim: #ECFEFF;
+    --pj:          #059669;
+    --pj-dim:      #D1FAE5;
+    --cta:         #D97706;
+    --cta-dim:     #FFFBEB;
+    --bg:          #F0FDFE;
+    --surface:     #FFFFFF;
+    --surface-2:   #F0FDFE;
+    --border:      #BAE6FD;
+    --text:        #0C4A6E;
+    --muted:       #64748B;
+    --success:     #059669;
+    --success-dim: #D1FAE5;
+    --danger:      #EF4444;
+    --danger-dim:  #FEE2E2;
+    --warning:     #D97706;
+    --warning-dim: #FFFBEB;
+    --shadow-sm:   0 1px 4px rgba(8,145,178,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow:      0 4px 16px rgba(8,145,178,0.14), 0 2px 6px rgba(0,0,0,0.06);
+    --radius:      12px;
+    --fh:          'Figtree', sans-serif;
+    --fb:          'Noto Sans', sans-serif;
+    --fm:          'Noto Sans Mono', 'Fira Code', monospace;
+    --stripe:      rgba(186,230,253,.38);
+    --hdr-from:    #0C4A6E;
+    --hdr-to:      #155E75;
+    --tbl-head-bg: linear-gradient(135deg,#ECFEFF 0%,#F0FDFE 100%);
+  }
+  body.dark-mode {
+    --primary:     #22D3EE;
+    --primary-lt:  #67E8F9;
+    --primary-dim: #0A2030;
+    --pj:          #34D399;
+    --pj-dim:      #042C1A;
+    --cta:         #FBBF24;
+    --cta-dim:     #1A1200;
+    --bg:          #060E1A;
+    --surface:     #0C1A2E;
+    --surface-2:   #0F2040;
+    --border:      #1A3347;
+    --text:        #CEE9F7;
+    --muted:       #6B96AE;
+    --success:     #34D399;
+    --success-dim: #042C1A;
+    --danger:      #F87171;
+    --danger-dim:  #2C0E0E;
+    --warning:     #FBBF24;
+    --warning-dim: #1A1200;
+    --shadow-sm:   0 1px 4px rgba(0,0,0,0.5);
+    --shadow:      0 4px 20px rgba(0,0,0,0.65);
+    --stripe:      rgba(34,211,238,.05);
+    --hdr-from:    #050E1C;
+    --hdr-to:      #091526;
+    --tbl-head-bg: linear-gradient(135deg,#0A2030 0%,#0C1A2E 100%);
+  }
+
+  body { font-family: var(--fb); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; transition: background .3s, color .3s; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, var(--hdr-from) 0%, var(--hdr-to) 100%);
+    color: #fff; padding: 0 28px; height: 58px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .hbadge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); font-family: var(--fh); font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; letter-spacing: .7px; color: #BAE6FD; }
+  .htitle { font-family: var(--fh); font-size: 16px; font-weight: 800; letter-spacing: -.3px; }
+  .hsub { font-size: 11px; color: rgba(186,230,253,.6); margin-top: 1px; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  #refresh-btn, #dark-toggle {
+    background: rgba(255,255,255,0.12); color: #fff; border: 1px solid rgba(255,255,255,0.25);
+    padding: 7px 15px; border-radius: 8px; cursor: pointer; font-family: var(--fh);
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: background .15s;
+  }
+  #refresh-btn:hover, #dark-toggle:hover { background: rgba(255,255,255,0.22); }
+  #refresh-btn:disabled { opacity: .45; cursor: not-allowed; }
+  #dark-toggle { padding: 7px 10px; }
+  #last-updated { font-size: 11px; color: rgba(186,230,253,.5); }
+
+  /* Filter bar */
+  .filter-bar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 16px;
+    align-items: center; box-shadow: 0 1px 4px rgba(8,145,178,0.07);
+    position: sticky; top: 58px; z-index: 99;
+  }
+  .fg { display: flex; align-items: center; gap: 6px; }
+  .fl { font-family: var(--fh); font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
+  .fsep { width: 1px; height: 24px; background: var(--border); }
+  .toggle-btn {
+    display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px;
+    border-radius: 6px; border: 1.5px solid var(--border); font-size: 12px;
+    font-weight: 600; cursor: pointer; background: var(--surface);
+    color: var(--muted); transition: all .15s; font-family: var(--fh); white-space: nowrap;
+  }
+  .toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
+  .toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  input[type="date"], select {
+    padding: 6px 10px; border-radius: 6px; border: 1.5px solid var(--border);
+    font-size: 12px; color: var(--text); background: var(--surface);
+    font-family: var(--fh); font-weight: 500; cursor: pointer;
+  }
+  input[type="date"]:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
+
+  /* Tab bar */
+  .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 28px; display: flex; gap: 6px; overflow-x: auto; }
+  .tab { padding: 8px 18px; font-size: 13px; font-weight: 600; font-family: var(--fh); color: var(--muted); cursor: pointer; border-radius: 8px; white-space: nowrap; transition: all .15s; user-select: none; }
+  .tab:hover { color: var(--primary); background: var(--primary-dim); }
+  .tab.active { background: var(--primary); color: #fff; }
+
+  /* Page & panels */
+  .page { padding: 20px 28px; max-width: 1440px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* KPI grid */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-card {
+    background: var(--surface); border-radius: var(--radius); padding: 18px 20px;
+    box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary); position: relative;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .kpi-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+  .kpi-card.green { border-left-color: var(--success); }
+  .kpi-card.red   { border-left-color: var(--danger); }
+  .kpi-card.warn  { border-left-color: var(--warning); }
+  .kpi-label { font-family: var(--fh); font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .7px; margin-bottom: 10px; }
+  .kpi-value { font-family: var(--fh); font-size: 28px; font-weight: 800; color: var(--text); line-height: 1; display: flex; align-items: baseline; gap: 6px; }
+  .kpi-unit  { font-size: 14px; font-weight: 600; color: var(--muted); }
+  .kpi-sub   { font-size: 11px; color: var(--muted); margin-top: 6px; font-family: var(--fb); }
+  .kpi-pill  { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin-top: 8px; font-family: var(--fh); }
+  .pill-green { background: var(--success-dim); color: var(--success); }
+  .pill-red   { background: var(--danger-dim);  color: var(--danger); }
+  .pill-warn  { background: var(--warning-dim); color: var(--warning); }
+  .pill-blue  { background: var(--primary-dim); color: var(--primary); }
+
+  /* Chart cards */
+  .row { display: grid; gap: 16px; margin-bottom: 16px; }
+  .card { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); }
+  .card h3 { font-family: var(--fh); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .card h3 .sub { font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  .chart-wrap { position: relative; height: 320px; }
+  .chart-wrap.tall { height: 380px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--fb); }
+  thead th { background: var(--tbl-head-bg); color: var(--text); font-family: var(--fh); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-family: var(--fm); font-size: 13px; }
+  tbody tr:nth-child(odd) td { background: var(--stripe); }
+  tbody tr:hover td { background: var(--primary-dim); }
+  td.svc-label, th.svc-label { font-family: var(--fh); font-weight: 600; }
+  td.num { text-align: right; }
+  th.num { text-align: right; }
+
+  /* Loading + error */
+  #loading {
+    position: fixed; inset: 0; background: rgba(240,253,254,.95); display: flex;
+    align-items: center; justify-content: center; z-index: 200; font-family: var(--fh); font-weight: 600;
+  }
+  body.dark-mode #loading { background: rgba(6,14,26,.95); }
+  #loading.hidden { display: none; }
+  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-right: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #error-banner { background: var(--danger-dim); color: var(--danger); padding: 12px 28px; font-weight: 700; font-family: var(--fh); display: none; }
+  #error-banner.visible { display: block; }
+
+  /* Embed mode for Google Sites iframe */
+  body.embed-mode .header { position: relative; top: auto; }
+  body.embed-mode .filter-bar { position: relative; top: auto; }
+
+  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } .page { padding: 16px; } .header { padding: 0 16px; } .filter-bar { padding: 10px 16px; } .tab-bar { padding: 10px 16px; } }
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div>Loading data…</div>
+
+<header class="header">
+  <div class="header-left">
+    <span class="hbadge">FKP1</span>
+    <div>
+      <div class="htitle">Pharmacy Queue Dashboard</div>
+      <div class="hsub">HSIS Serdang · Farmasi Klinik Pakar 1</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span id="last-updated"></span>
+    <button id="refresh-btn" title="Refresh data">↻ Refresh</button>
+    <button id="dark-toggle" title="Toggle dark mode">🌙</button>
+  </div>
+</header>
+
+<div id="error-banner"></div>
+
+<div class="filter-bar">
+  <div class="fg">
+    <span class="fl">Range</span>
+    <button class="toggle-btn range-btn active" data-range="30">30 days</button>
+    <button class="toggle-btn range-btn" data-range="60">60 days</button>
+    <button class="toggle-btn range-btn" data-range="90">90 days</button>
+  </div>
+  <div class="fsep"></div>
+  <div class="fg">
+    <span class="fl">Granularity</span>
+    <button class="toggle-btn gran-btn active" data-gran="daily">Daily</button>
+    <button class="toggle-btn gran-btn" data-gran="weekly">Weekly</button>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" data-tab="health">Operational Health</div>
+  <div class="tab" data-tab="daily">Daily Operations</div>
+  <div class="tab" data-tab="trends">Trends</div>
+  <div class="tab" data-tab="services">Service Breakdown</div>
+</div>
+
+<main class="page">
+
+  <!-- ────────────────────────── Tab 1 : Operational Health ────────────────────────── -->
+  <section class="panel active" id="panel-health">
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Within-30-min %  <span class="sub">vs 95% target · rolling window</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-target"></canvas></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Service-level performance · latest day</h3>
+        <table id="service-latest-table">
+          <thead><tr>
+            <th class="svc-label">Service</th>
+            <th class="num">Total Rx</th>
+            <th class="num">Within 30 min %</th>
+            <th class="num">Avg wait (min)</th>
+            <th class="num">Median wait (min)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── Tab 2 : Daily Operations ────────────────────────── -->
+  <section class="panel" id="panel-daily">
+    <div class="row" style="grid-template-columns: 1fr; align-items: end;">
+      <div class="card" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center;">
+        <div class="fg">
+          <span class="fl">Day</span>
+          <input type="date" id="daily-date">
+        </div>
+        <div class="fsep"></div>
+        <div class="fg" id="daily-quick"></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Intraday wait time &amp; queue length  <span class="sub">30-min buckets</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── Tab 3 : Trends ────────────────────────── -->
+  <section class="panel" id="panel-trends">
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Within-30-min % over time  <span class="sub">target line at 95%</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-trend-pct"></canvas></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Average &amp; median waiting time  <span class="sub">minutes</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-trend-wait"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ────────────────────────── Tab 4 : Service Breakdown ────────────────────────── -->
+  <section class="panel" id="panel-services">
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+        <span class="fl">Services</span>
+        <button class="toggle-btn svc-btn active" data-svc="KURANG3">Kurang 3 / OKU</button>
+        <button class="toggle-btn svc-btn active" data-svc="LEBIH3">Lebih 3</button>
+        <button class="toggle-btn svc-btn active" data-svc="BMSONLY">Ulangan</button>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Within-30-min % per service  <span class="sub">target line at 95%</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-svc"></canvas></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns: 1fr;">
+      <div class="card">
+        <h3>Service summary · selected range</h3>
+        <table id="service-range-table">
+          <thead><tr>
+            <th class="svc-label">Service</th>
+            <th class="num">Total Rx</th>
+            <th class="num">Avg within-30 %</th>
+            <th class="num">Avg wait (min)</th>
+            <th class="num">Median wait (min)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+/* ─────────────────────────── Configuration ─────────────────────────── */
+const SHEET_ID = '1yIIm_lbopIggu0BjnBVmxtgTTT1F2pNP7YPSpSCJ1mc';
+const SHEET_DAILY    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=daily_summary`;
+const SHEET_SERVICE  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=service_summary`;
+const SHEET_INTRADAY = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=intraday`;
+
+const TARGET_PCT = 95;
+const SVC_LABELS = { KURANG3: 'Kurang 3 / OKU', LEBIH3: 'Lebih 3', BMSONLY: 'Ulangan' };
+const SVC_COLORS = { KURANG3: '#0891B2', LEBIH3: '#7C3AED', BMSONLY: '#D97706' };
+const SVC_KEYS   = ['KURANG3', 'LEBIH3', 'BMSONLY'];
+
+let dailyData = [], serviceData = [], intradayData = [];
+const charts = {};
+const state = { range: 30, gran: 'daily', activeTab: 'health', services: new Set(SVC_KEYS), dailyDate: null };
+
+/* ─────────────────────────── JSONP fetch (works locally + on Sites) ─────────────────────────── */
+let _cb = 0;
+function gvizFetch(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = '__gviz_cb_' + (++_cb);
+    const script = document.createElement('script');
+    const timer  = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 15000);
+    function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.remove(); }
+    window[cbName] = function(data) {
+      cleanup();
+      try {
+        const cols = data.table.cols.map(c => (c.label || c.id || '').trim());
+        const rows = (data.table.rows || []).map(r => {
+          const obj = {};
+          (r.c || []).forEach((cell, i) => {
+            obj[cols[i]] = cell && cell.v !== null && cell.v !== undefined ? cell.v : '';
+          });
+          return obj;
+        });
+        resolve(rows);
+      } catch (e) { reject(new Error('Sheet parse failed: ' + e.message)); }
+    };
+    script.onerror = () => { cleanup(); reject(new Error('Failed to load sheet — is the sheet published and the SHEET_ID correct?')); };
+    script.src = url + '&tqx=responseHandler:' + cbName;
+    document.head.appendChild(script);
+  });
+}
+
+function num(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; }
+function str(v) { return v === null || v === undefined ? '' : String(v).trim(); }
+
+/* gviz returns dates as either Date(yyyy,mm,dd) strings or formatted strings depending on cell type — normalize to YYYY-MM-DD */
+function parseDate(v) {
+  if (!v) return '';
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  const s = String(v);
+  // Format: "Date(2026,4,6)"  (months are 0-based in gviz)
+  const m = s.match(/^Date\((\d+),(\d+),(\d+)/);
+  if (m) {
+    const y = +m[1], mo = +m[2] + 1, d = +m[3];
+    return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+  // ISO-like
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+  // mm/dd/yyyy or dd/mm/yyyy fallback — assume the sheet stores ISO via Apps Script; otherwise leave raw
+  return s;
+}
+
+/* ─────────────────────────── Data load ─────────────────────────── */
+async function loadData() {
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('refresh-btn').disabled = true;
+  document.getElementById('error-banner').classList.remove('visible');
+
+  try {
+    const [d, s, i] = await Promise.all([
+      gvizFetch(SHEET_DAILY),
+      gvizFetch(SHEET_SERVICE),
+      gvizFetch(SHEET_INTRADAY),
+    ]);
+    dailyData = d.map(r => ({
+      date: parseDate(r.date),
+      total_rx: num(r.total_rx),
+      within_30min_pct: num(r.within_30min_pct),
+      avg_wait_min: num(r.avg_wait_min),
+      median_wait_min: num(r.median_wait_min),
+      n_PF: num(r.n_PF),
+      n_PRP: num(r.n_PRP),
+      n_PPF: num(r.n_PPF),
+    })).filter(r => r.date).sort((a,b) => a.date.localeCompare(b.date));
+
+    serviceData = s.map(r => ({
+      date: parseDate(r.date),
+      service: str(r.service),
+      total_rx: num(r.total_rx),
+      within_30min_pct: num(r.within_30min_pct),
+      avg_wait_min: num(r.avg_wait_min),
+      median_wait_min: num(r.median_wait_min),
+    })).filter(r => r.date && r.service);
+
+    intradayData = i.map(r => ({
+      date: parseDate(r.date),
+      time_bucket: str(r.time_bucket),
+      avg_wait_served_min: num(r.avg_wait_served_min),
+      live_patients_peak: num(r.live_patients_peak),
+    })).filter(r => r.date && r.time_bucket);
+
+    document.getElementById('last-updated').textContent =
+      'Updated: ' + new Date().toLocaleString('en-MY', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+    initDailyDatePicker();
+    renderAll();
+  } catch (err) {
+    const banner = document.getElementById('error-banner');
+    banner.textContent = '⚠ ' + err.message;
+    banner.classList.add('visible');
+  } finally {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('refresh-btn').disabled = false;
+  }
+}
+
+/* ─────────────────────────── Helpers ─────────────────────────── */
+function inRange(d, days) {
+  if (!dailyData.length) return false;
+  const last = dailyData[dailyData.length - 1].date;
+  const cutoff = new Date(last);
+  cutoff.setDate(cutoff.getDate() - days + 1);
+  return new Date(d) >= cutoff;
+}
+function dailyInRange() { return dailyData.filter(r => inRange(r.date, state.range)); }
+function serviceInRange() { return serviceData.filter(r => inRange(r.date, state.range)); }
+
+/* ISO-week roll-up (Mon-based): groups daily values by week, averages percents/waits, sums total_rx */
+function rollWeekly(rows, valueKey, mode = 'mean') {
+  const buckets = {};
+  rows.forEach(r => {
+    const dt = new Date(r.date);
+    const day = (dt.getDay() + 6) % 7; // Mon=0
+    const monday = new Date(dt); monday.setDate(dt.getDate() - day);
+    const key = monday.toISOString().slice(0,10);
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(r[valueKey]);
+  });
+  return Object.keys(buckets).sort().map(k => {
+    const vals = buckets[k];
+    const v = mode === 'sum' ? vals.reduce((a,b) => a+b, 0)
+            : vals.reduce((a,b) => a+b, 0) / vals.length;
+    return { date: k, value: Math.round(v * 100) / 100 };
+  });
+}
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function chartTheme() {
+  const cs = getComputedStyle(document.body);
+  return {
+    text:   cs.getPropertyValue('--text').trim(),
+    muted:  cs.getPropertyValue('--muted').trim(),
+    grid:   cs.getPropertyValue('--border').trim(),
+    bg:     cs.getPropertyValue('--surface').trim(),
+  };
+}
+
+/* ─────────────────────────── KPI cards (Tab 1) ─────────────────────────── */
+function renderKPIs() {
+  const grid = document.getElementById('kpi-grid');
+  if (!dailyData.length) { grid.innerHTML = '<div class="card">No data yet.</div>'; return; }
+  const latest = dailyData[dailyData.length - 1];
+  const within = latest.within_30min_pct;
+  const targetMet = within >= TARGET_PCT;
+  const staffTotal = latest.n_PF + latest.n_PRP + latest.n_PPF;
+
+  const cards = [
+    {
+      cls: targetMet ? 'green' : 'red',
+      label: 'Within 30 min',
+      value: within.toFixed(1), unit: '%',
+      sub: `Target: ${TARGET_PCT}%`,
+      pill: targetMet ? `<span class="kpi-pill pill-green">▲ on target</span>` : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT - within).toFixed(1)}% below</span>`,
+    },
+    {
+      cls: '',
+      label: 'Total Rx',
+      value: latest.total_rx.toLocaleString(), unit: '',
+      sub: latest.date,
+      pill: '',
+    },
+    {
+      cls: latest.avg_wait_min <= 30 ? 'green' : 'warn',
+      label: 'Avg wait',
+      value: latest.avg_wait_min.toFixed(1), unit: 'min',
+      sub: '',
+      pill: '',
+    },
+    {
+      cls: latest.median_wait_min <= 30 ? 'green' : 'warn',
+      label: 'Median wait',
+      value: latest.median_wait_min.toFixed(1), unit: 'min',
+      sub: '',
+      pill: '',
+    },
+    {
+      cls: '',
+      label: 'Staff on duty',
+      value: staffTotal || '—', unit: '',
+      sub: `PF ${latest.n_PF} · PRP ${latest.n_PRP} · PPF ${latest.n_PPF}`,
+      pill: '',
+    },
+  ];
+
+  grid.innerHTML = cards.map(c => `
+    <div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${c.value}${c.unit ? `<span class="kpi-unit">${c.unit}</span>` : ''}</div>
+      ${c.sub ? `<div class="kpi-sub">${c.sub}</div>` : ''}
+      ${c.pill}
+    </div>
+  `).join('');
+}
+
+/* ─────────────────────────── Tab 1: target line chart ─────────────────────────── */
+function renderTargetChart() {
+  destroyChart('target');
+  const rows = dailyInRange();
+  const theme = chartTheme();
+  let labels, dataset, label;
+
+  if (state.gran === 'weekly') {
+    const w = rollWeekly(rows, 'within_30min_pct', 'mean');
+    labels = w.map(r => 'wk ' + r.date.slice(5));
+    dataset = w.map(r => r.value);
+    label = 'Within-30 % (weekly avg)';
+  } else {
+    labels = rows.map(r => r.date.slice(5));
+    dataset = rows.map(r => r.within_30min_pct);
+    label = 'Within-30 %';
+  }
+
+  const ctx = document.getElementById('chart-target').getContext('2d');
+  charts.target = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label, data: dataset, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)',
+          tension: 0.25, fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
+        },
+        {
+          label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT),
+          borderColor: '#059669', borderDash: [6, 4], pointRadius: 0, fill: false,
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      plugins: {
+        legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } },
+        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toFixed(1) + '%' } },
+        datalabels: { display: false },
+      },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      },
+    },
+  });
+}
+
+/* ─────────────────────────── Tab 1: service-latest table ─────────────────────────── */
+function renderServiceLatestTable() {
+  const tbody = document.querySelector('#service-latest-table tbody');
+  if (!dailyData.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No data</td></tr>'; return; }
+  const latest = dailyData[dailyData.length - 1].date;
+  const rows = serviceData.filter(r => r.date === latest);
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ' + latest + '</td></tr>'; return; }
+  tbody.innerHTML = SVC_KEYS.map(svc => {
+    const r = rows.find(x => x.service === svc);
+    if (!r) return '';
+    const okPill = r.within_30min_pct >= TARGET_PCT
+      ? `<span class="kpi-pill pill-green">▲ ${r.within_30min_pct.toFixed(1)}%</span>`
+      : `<span class="kpi-pill pill-red">${r.within_30min_pct.toFixed(1)}%</span>`;
+    return `<tr>
+      <td class="svc-label">${SVC_LABELS[svc]}</td>
+      <td class="num">${r.total_rx}</td>
+      <td class="num">${okPill}</td>
+      <td class="num">${r.avg_wait_min.toFixed(1)}</td>
+      <td class="num">${r.median_wait_min.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─────────────────────────── Tab 2: intraday dual-axis ─────────────────────────── */
+function initDailyDatePicker() {
+  const picker = document.getElementById('daily-date');
+  if (!intradayData.length) return;
+  const dates = [...new Set(intradayData.map(r => r.date))].sort();
+  const latest = dates[dates.length - 1];
+  picker.min = dates[0];
+  picker.max = latest;
+  picker.value = state.dailyDate || latest;
+  state.dailyDate = picker.value;
+  picker.onchange = () => { state.dailyDate = picker.value; renderDaily(); };
+}
+
+function renderDaily() {
+  const date = state.dailyDate;
+  const rows = intradayData.filter(r => r.date === date).sort((a,b) => a.time_bucket.localeCompare(b.time_bucket));
+  const theme = chartTheme();
+
+  // Quick stats
+  const dayDaily = dailyData.find(d => d.date === date);
+  const peak = rows.reduce((p, r) => r.live_patients_peak > p.v ? { v: r.live_patients_peak, t: r.time_bucket } : p, { v: 0, t: '—' });
+  const stats = document.getElementById('daily-quick');
+  if (dayDaily) {
+    stats.innerHTML = `
+      <span class="fl">Total Rx</span><span style="font-family:var(--fm);font-weight:600">${dayDaily.total_rx}</span>
+      <div class="fsep"></div>
+      <span class="fl">Within 30 min</span>
+      <span class="kpi-pill ${dayDaily.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red'}">${dayDaily.within_30min_pct.toFixed(1)}%</span>
+      <div class="fsep"></div>
+      <span class="fl">Peak queue</span><span style="font-family:var(--fm);font-weight:600">${peak.v} @ ${peak.t}</span>
+    `;
+  } else {
+    stats.innerHTML = `<span class="fl" style="color:var(--muted)">No daily summary for ${date}</span>`;
+  }
+
+  destroyChart('intraday');
+  const ctx = document.getElementById('chart-intraday').getContext('2d');
+  charts.intraday = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: rows.map(r => r.time_bucket),
+      datasets: [
+        {
+          label: 'Avg wait (min)', data: rows.map(r => r.avg_wait_served_min),
+          borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)',
+          tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
+        },
+        {
+          label: 'Live patients (peak)', data: rows.map(r => r.live_patients_peak),
+          borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)',
+          tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, pointBackgroundColor: '#D97706',
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x:  { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Time of day', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
+        y:  { type: 'linear', position: 'left',  ticks: { color: '#0891B2', callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Avg wait (min)', color: '#0891B2', font: { family: 'Figtree', weight: '600' } } },
+        y1: { type: 'linear', position: 'right', ticks: { color: '#D97706', font: { family: 'Noto Sans Mono' } }, grid: { display: false }, title: { display: true, text: 'Live patients', color: '#D97706', font: { family: 'Figtree', weight: '600' } } },
+      },
+    },
+  });
+}
+
+/* ─────────────────────────── Tab 3: trends ─────────────────────────── */
+function renderTrends() {
+  const rows = dailyInRange();
+  const theme = chartTheme();
+  destroyChart('trendPct');
+  destroyChart('trendWait');
+
+  let labels, pctSeries, avgSeries, medSeries;
+  if (state.gran === 'weekly') {
+    const wPct = rollWeekly(rows, 'within_30min_pct', 'mean');
+    const wAvg = rollWeekly(rows, 'avg_wait_min', 'mean');
+    const wMed = rollWeekly(rows, 'median_wait_min', 'mean');
+    labels = wPct.map(r => 'wk ' + r.date.slice(5));
+    pctSeries = wPct.map(r => r.value);
+    avgSeries = wAvg.map(r => r.value);
+    medSeries = wMed.map(r => r.value);
+  } else {
+    labels = rows.map(r => r.date.slice(5));
+    pctSeries = rows.map(r => r.within_30min_pct);
+    avgSeries = rows.map(r => r.avg_wait_min);
+    medSeries = rows.map(r => r.median_wait_min);
+  }
+
+  charts.trendPct = new Chart(document.getElementById('chart-trend-pct').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Within 30 min %', data: pctSeries, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)', tension: 0.25, fill: true, pointRadius: 2, pointBackgroundColor: '#0891B2' },
+      { label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false },
+    ]},
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      },
+    },
+  });
+
+  charts.trendWait = new Chart(document.getElementById('chart-trend-wait').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Average', data: avgSeries, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)', tension: 0.25, fill: false, pointRadius: 2 },
+      { label: 'Median', data: medSeries, borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.08)', tension: 0.25, fill: false, pointRadius: 2 },
+      { label: '30-min target', data: labels.map(() => 30), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false },
+    ]},
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { ticks: { color: theme.muted, callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      },
+    },
+  });
+}
+
+/* ─────────────────────────── Tab 4: services ─────────────────────────── */
+function renderServices() {
+  const rows = serviceInRange().filter(r => state.services.has(r.service));
+  const theme = chartTheme();
+  destroyChart('svc');
+
+  // Build per-date labels (union)
+  const dates = [...new Set(rows.map(r => r.date))].sort();
+  const labels = dates.map(d => d.slice(5));
+  const datasets = SVC_KEYS.filter(k => state.services.has(k)).map(svc => {
+    const data = dates.map(d => {
+      const r = rows.find(x => x.date === d && x.service === svc);
+      return r ? r.within_30min_pct : null;
+    });
+    return {
+      label: SVC_LABELS[svc], data, borderColor: SVC_COLORS[svc],
+      backgroundColor: SVC_COLORS[svc] + '20', tension: 0.25, fill: false, pointRadius: 2,
+    };
+  });
+  datasets.push({ label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false });
+
+  charts.svc = new Chart(document.getElementById('chart-svc').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      },
+    },
+  });
+
+  const tbody = document.querySelector('#service-range-table tbody');
+  tbody.innerHTML = SVC_KEYS.map(svc => {
+    const sub = rows.filter(r => r.service === svc);
+    if (!sub.length) return '';
+    const totRx  = sub.reduce((a,r) => a + r.total_rx, 0);
+    const avgPct = sub.reduce((a,r) => a + r.within_30min_pct, 0) / sub.length;
+    const avgWt  = sub.reduce((a,r) => a + r.avg_wait_min, 0)     / sub.length;
+    const medWt  = sub.reduce((a,r) => a + r.median_wait_min, 0)  / sub.length;
+    const okPill = avgPct >= TARGET_PCT
+      ? `<span class="kpi-pill pill-green">${avgPct.toFixed(1)}%</span>`
+      : `<span class="kpi-pill pill-red">${avgPct.toFixed(1)}%</span>`;
+    return `<tr>
+      <td class="svc-label">${SVC_LABELS[svc]}</td>
+      <td class="num">${totRx}</td>
+      <td class="num">${okPill}</td>
+      <td class="num">${avgWt.toFixed(1)}</td>
+      <td class="num">${medWt.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─────────────────────────── Render orchestrator ─────────────────────────── */
+function renderAll() {
+  renderKPIs();
+  renderTargetChart();
+  renderServiceLatestTable();
+  if (state.dailyDate) renderDaily();
+  renderTrends();
+  renderServices();
+}
+
+/* ─────────────────────────── Wiring ─────────────────────────── */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab.dataset.tab));
+    state.activeTab = tab.dataset.tab;
+  });
+});
+
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', b === btn));
+    state.range = parseInt(btn.dataset.range, 10);
+    renderTargetChart(); renderTrends(); renderServices();
+  });
+});
+
+document.querySelectorAll('.gran-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.gran-btn').forEach(b => b.classList.toggle('active', b === btn));
+    state.gran = btn.dataset.gran;
+    renderTargetChart(); renderTrends();
+  });
+});
+
+document.querySelectorAll('.svc-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    const svc = btn.dataset.svc;
+    if (state.services.has(svc)) state.services.delete(svc); else state.services.add(svc);
+    renderServices();
+  });
+});
+
+document.getElementById('refresh-btn').addEventListener('click', loadData);
+
+document.getElementById('dark-toggle').addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  document.getElementById('dark-toggle').textContent = document.body.classList.contains('dark-mode') ? '☀' : '🌙';
+  renderAll();
+});
+
+/* Embed mode for Google Sites */
+if (location.hash === '#embed' || location.search.includes('embed=1')) {
+  document.body.classList.add('embed-mode');
+}
+
+loadData();
+</script>
+</body>
+</html>
