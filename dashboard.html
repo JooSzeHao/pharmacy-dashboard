@@ -151,6 +151,10 @@
   .pill-red   { background: var(--danger-dim);  color: var(--danger); }
   .pill-warn  { background: var(--warning-dim); color: var(--warning); }
   .pill-blue  { background: var(--primary-dim); color: var(--primary); }
+  .kpi-divider { border-top: 1px solid var(--border); margin: 10px 0 8px; }
+  .kpi-month-label { font-family: var(--fh); font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+  .kpi-month-value { font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--text); }
+  .kpi-month-unit  { font-size: 11px; font-weight: 500; color: var(--muted); }
 
   /* Chart cards */
   .row { display: grid; gap: 16px; margin-bottom: 16px; }
@@ -213,50 +217,37 @@
 
 <div class="filter-bar">
   <div class="fg">
-    <span class="fl">Range</span>
-    <button class="toggle-btn range-btn active" data-range="30">30 days</button>
-    <button class="toggle-btn range-btn" data-range="60">60 days</button>
-    <button class="toggle-btn range-btn" data-range="90">90 days</button>
+    <span class="fl">From</span>
+    <input type="date" id="from-date">
   </div>
   <div class="fsep"></div>
   <div class="fg">
-    <span class="fl">Granularity</span>
-    <button class="toggle-btn gran-btn active" data-gran="daily">Daily</button>
-    <button class="toggle-btn gran-btn" data-gran="weekly">Weekly</button>
+    <span class="fl">To</span>
+    <input type="date" id="to-date">
   </div>
 </div>
 
 <div class="tab-bar">
-  <div class="tab active" data-tab="health">Operational Health</div>
+  <div class="tab active" data-tab="health">Waiting Time</div>
   <div class="tab" data-tab="daily">Daily Operations</div>
-  <div class="tab" data-tab="trends">Trends</div>
-  <div class="tab" data-tab="services">Service Breakdown</div>
+  <div class="tab" data-tab="services">Service Insight</div>
 </div>
 
 <main class="page">
 
-  <!-- ────────────────────────── Tab 1 : Operational Health ────────────────────────── -->
+  <!-- ────────────────────────── Tab 1 : Waiting Time ────────────────────────── -->
   <section class="panel active" id="panel-health">
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="row" style="grid-template-columns: 1fr;">
       <div class="card">
-        <h3>Within-30-min %  <span class="sub">vs 95% target · rolling window</span></h3>
-        <div class="chart-wrap tall"><canvas id="chart-target"></canvas></div>
+        <h3>Within-30-min %  <span class="sub">vs 95% target · selected range</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-trend-pct"></canvas></div>
       </div>
     </div>
     <div class="row" style="grid-template-columns: 1fr;">
       <div class="card">
-        <h3>Service-level performance · latest day</h3>
-        <table id="service-latest-table">
-          <thead><tr>
-            <th class="svc-label">Service</th>
-            <th class="num">Total Rx</th>
-            <th class="num">Within 30 min %</th>
-            <th class="num">Avg wait (min)</th>
-            <th class="num">Median wait (min)</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
+        <h3>Average &amp; median waiting time  <span class="sub">minutes · selected range</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-trend-wait"></canvas></div>
       </div>
     </div>
   </section>
@@ -279,25 +270,24 @@
         <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
       </div>
     </div>
-  </section>
-
-  <!-- ────────────────────────── Tab 3 : Trends ────────────────────────── -->
-  <section class="panel" id="panel-trends">
     <div class="row" style="grid-template-columns: 1fr;">
       <div class="card">
-        <h3>Within-30-min % over time  <span class="sub">target line at 95%</span></h3>
-        <div class="chart-wrap tall"><canvas id="chart-trend-pct"></canvas></div>
-      </div>
-    </div>
-    <div class="row" style="grid-template-columns: 1fr;">
-      <div class="card">
-        <h3>Average &amp; median waiting time  <span class="sub">minutes</span></h3>
-        <div class="chart-wrap tall"><canvas id="chart-trend-wait"></canvas></div>
+        <h3>Service-level performance  <span class="sub" id="daily-svc-date-label"></span></h3>
+        <table id="service-latest-table">
+          <thead><tr>
+            <th class="svc-label">Service</th>
+            <th class="num">Total Rx</th>
+            <th class="num">Within 30 min %</th>
+            <th class="num">Avg wait (min)</th>
+            <th class="num">Median wait (min)</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
       </div>
     </div>
   </section>
 
-  <!-- ────────────────────────── Tab 4 : Service Breakdown ────────────────────────── -->
+  <!-- ────────────────────────── Tab 3 : Service Insight ────────────────────────── -->
   <section class="panel" id="panel-services">
     <div class="row" style="grid-template-columns: 1fr;">
       <div class="card" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
@@ -328,6 +318,16 @@
         </table>
       </div>
     </div>
+    <div class="row" style="grid-template-columns: 1fr 1fr;">
+      <div class="card">
+        <h3>Daily Volume vs Average Wait  <span class="sub">all time</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-scatter-vol"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Daily Staffing vs Average Wait  <span class="sub">days with staff data</span></h3>
+        <div class="chart-wrap tall"><canvas id="chart-scatter-staff"></canvas></div>
+      </div>
+    </div>
   </section>
 
 </main>
@@ -344,11 +344,17 @@ const SVC_LABELS = { KURANG3: 'Kurang 3 / OKU', LEBIH3: 'Lebih 3', BMSONLY: 'Ula
 const SVC_COLORS = { KURANG3: '#0891B2', LEBIH3: '#7C3AED', BMSONLY: '#D97706' };
 const SVC_KEYS   = ['KURANG3', 'LEBIH3', 'BMSONLY'];
 
+const INTRADAY_BUCKETS = [
+  '07:30','08:00','08:30','09:00','09:30','10:00','10:30',
+  '11:00','11:30','12:00','12:30','13:00','13:30','14:00',
+  '14:30','15:00','15:30','16:00','16:30','17:00','17:30'
+];
+
 let dailyData = [], serviceData = [], intradayData = [];
 const charts = {};
-const state = { range: 30, gran: 'daily', activeTab: 'health', services: new Set(SVC_KEYS), dailyDate: null };
+const state = { fromDate: null, toDate: null, activeTab: 'health', services: new Set(SVC_KEYS), dailyDate: null };
 
-/* ─────────────────────────── JSONP fetch (works locally + on Sites) ─────────────────────────── */
+/* ─────────────────────────── JSONP fetch ─────────────────────────── */
 let _cb = 0;
 function gvizFetch(url) {
   return new Promise((resolve, reject) => {
@@ -379,20 +385,16 @@ function gvizFetch(url) {
 function num(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; }
 function str(v) { return v === null || v === undefined ? '' : String(v).trim(); }
 
-/* gviz returns dates as either Date(yyyy,mm,dd) strings or formatted strings depending on cell type — normalize to YYYY-MM-DD */
 function parseDate(v) {
   if (!v) return '';
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   const s = String(v);
-  // Format: "Date(2026,4,6)"  (months are 0-based in gviz)
   const m = s.match(/^Date\((\d+),(\d+),(\d+)/);
   if (m) {
     const y = +m[1], mo = +m[2] + 1, d = +m[3];
     return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   }
-  // ISO-like
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
-  // mm/dd/yyyy or dd/mm/yyyy fallback — assume the sheet stores ISO via Apps Script; otherwise leave raw
   return s;
 }
 
@@ -438,6 +440,7 @@ async function loadData() {
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleString('en-MY', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 
+    initDateRange();
     initDailyDatePicker();
     renderAll();
   } catch (err) {
@@ -451,33 +454,38 @@ async function loadData() {
 }
 
 /* ─────────────────────────── Helpers ─────────────────────────── */
-function inRange(d, days) {
-  if (!dailyData.length) return false;
-  const last = dailyData[dailyData.length - 1].date;
-  const cutoff = new Date(last);
-  cutoff.setDate(cutoff.getDate() - days + 1);
-  return new Date(d) >= cutoff;
+function inRange(d) {
+  if (!state.fromDate || !state.toDate) return true;
+  return d >= state.fromDate && d <= state.toDate;
 }
-function dailyInRange() { return dailyData.filter(r => inRange(r.date, state.range)); }
-function serviceInRange() { return serviceData.filter(r => inRange(r.date, state.range)); }
+function dailyInRange() { return dailyData.filter(r => inRange(r.date)); }
+function serviceInRange() { return serviceData.filter(r => inRange(r.date)); }
 
-/* ISO-week roll-up (Mon-based): groups daily values by week, averages percents/waits, sums total_rx */
-function rollWeekly(rows, valueKey, mode = 'mean') {
-  const buckets = {};
-  rows.forEach(r => {
-    const dt = new Date(r.date);
-    const day = (dt.getDay() + 6) % 7; // Mon=0
-    const monday = new Date(dt); monday.setDate(dt.getDate() - day);
-    const key = monday.toISOString().slice(0,10);
-    if (!buckets[key]) buckets[key] = [];
-    buckets[key].push(r[valueKey]);
-  });
-  return Object.keys(buckets).sort().map(k => {
-    const vals = buckets[k];
-    const v = mode === 'sum' ? vals.reduce((a,b) => a+b, 0)
-            : vals.reduce((a,b) => a+b, 0) / vals.length;
-    return { date: k, value: Math.round(v * 100) / 100 };
-  });
+function monthlyStats() {
+  if (!dailyData.length) return null;
+  const latest = dailyData[dailyData.length - 1];
+  const ym = latest.date.slice(0, 7);
+  const month = dailyData.filter(r => r.date.startsWith(ym));
+  if (!month.length) return null;
+  const totalRx  = month.reduce((s, r) => s + r.total_rx, 0);
+  const avgPct   = month.reduce((s, r) => s + r.within_30min_pct, 0) / month.length;
+  const avgWait  = month.reduce((s, r) => s + r.avg_wait_min, 0) / month.length;
+  const medWait  = month.reduce((s, r) => s + r.median_wait_min, 0) / month.length;
+  const staffRows = month.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0);
+  const avgStaff  = staffRows.length ? staffRows.reduce((s, r) => s + r.n_PF + r.n_PRP + r.n_PPF, 0) / staffRows.length : null;
+  return { totalRx, avgPct, avgWait, medWait, avgStaff, ym };
+}
+
+function linReg(points) {
+  const n = points.length;
+  if (n < 2) return null;
+  const mx = points.reduce((s, p) => s + p.x, 0) / n;
+  const my = points.reduce((s, p) => s + p.y, 0) / n;
+  const num2 = points.reduce((s, p) => s + (p.x - mx) * (p.y - my), 0);
+  const den  = points.reduce((s, p) => s + (p.x - mx) ** 2, 0);
+  if (den === 0) return null;
+  const slope = num2 / den;
+  return { slope, intercept: my - slope * mx };
 }
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
@@ -492,29 +500,61 @@ function chartTheme() {
   };
 }
 
+/* ─────────────────────────── Date range init ─────────────────────────── */
+function initDateRange() {
+  if (!dailyData.length) return;
+  const latest = dailyData[dailyData.length - 1].date;
+  const from30 = new Date(latest);
+  from30.setDate(from30.getDate() - 29);
+  const fromStr = from30.toISOString().slice(0, 10);
+
+  const fromEl = document.getElementById('from-date');
+  const toEl   = document.getElementById('to-date');
+  fromEl.value = state.fromDate || fromStr;
+  toEl.value   = state.toDate   || latest;
+  state.fromDate = fromEl.value;
+  state.toDate   = toEl.value;
+
+  fromEl.onchange = () => { state.fromDate = fromEl.value; renderTrends(); renderServices(); };
+  toEl.onchange   = () => { state.toDate   = toEl.value;  renderTrends(); renderServices(); };
+}
+
 /* ─────────────────────────── KPI cards (Tab 1) ─────────────────────────── */
 function renderKPIs() {
   const grid = document.getElementById('kpi-grid');
   if (!dailyData.length) { grid.innerHTML = '<div class="card">No data yet.</div>'; return; }
-  const latest = dailyData[dailyData.length - 1];
-  const within = latest.within_30min_pct;
+  const latest  = dailyData[dailyData.length - 1];
+  const within  = latest.within_30min_pct;
   const targetMet = within >= TARGET_PCT;
   const staffTotal = latest.n_PF + latest.n_PRP + latest.n_PPF;
+  const mo = monthlyStats();
+  const mLabel = mo ? mo.ym.replace('-', '/') + ' avg' : '';
+
+  function monthSub(value, unit) {
+    if (!mo) return '';
+    return `<div class="kpi-divider"></div>
+      <div class="kpi-month-label">${mLabel}</div>
+      <div class="kpi-month-value">${value}<span class="kpi-month-unit"> ${unit}</span></div>`;
+  }
 
   const cards = [
     {
       cls: targetMet ? 'green' : 'red',
       label: 'Within 30 min',
       value: within.toFixed(1), unit: '%',
-      sub: `Target: ${TARGET_PCT}%`,
-      pill: targetMet ? `<span class="kpi-pill pill-green">▲ on target</span>` : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT - within).toFixed(1)}% below</span>`,
+      sub: `Latest: ${latest.date}`,
+      pill: targetMet
+        ? `<span class="kpi-pill pill-green">▲ on target</span>`
+        : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT - within).toFixed(1)}% below</span>`,
+      month: mo ? monthSub(mo.avgPct.toFixed(1), '%') : '',
     },
     {
       cls: '',
       label: 'Total Rx',
       value: latest.total_rx.toLocaleString(), unit: '',
-      sub: latest.date,
+      sub: `Latest: ${latest.date}`,
       pill: '',
+      month: mo ? monthSub(mo.totalRx.toLocaleString(), 'this month') : '',
     },
     {
       cls: latest.avg_wait_min <= 30 ? 'green' : 'warn',
@@ -522,6 +562,7 @@ function renderKPIs() {
       value: latest.avg_wait_min.toFixed(1), unit: 'min',
       sub: '',
       pill: '',
+      month: mo ? monthSub(mo.avgWait.toFixed(1), 'min') : '',
     },
     {
       cls: latest.median_wait_min <= 30 ? 'green' : 'warn',
@@ -529,6 +570,7 @@ function renderKPIs() {
       value: latest.median_wait_min.toFixed(1), unit: 'min',
       sub: '',
       pill: '',
+      month: mo ? monthSub(mo.medWait.toFixed(1), 'min') : '',
     },
     {
       cls: '',
@@ -536,6 +578,7 @@ function renderKPIs() {
       value: staffTotal || '—', unit: '',
       sub: `PF ${latest.n_PF} · PRP ${latest.n_PRP} · PPF ${latest.n_PPF}`,
       pill: '',
+      month: mo && mo.avgStaff !== null ? monthSub(mo.avgStaff.toFixed(1), 'avg') : '',
     },
   ];
 
@@ -545,171 +588,22 @@ function renderKPIs() {
       <div class="kpi-value">${c.value}${c.unit ? `<span class="kpi-unit">${c.unit}</span>` : ''}</div>
       ${c.sub ? `<div class="kpi-sub">${c.sub}</div>` : ''}
       ${c.pill}
+      ${c.month}
     </div>
   `).join('');
 }
 
-/* ─────────────────────────── Tab 1: target line chart ─────────────────────────── */
-function renderTargetChart() {
-  destroyChart('target');
-  const rows = dailyInRange();
-  const theme = chartTheme();
-  let labels, dataset, label;
-
-  if (state.gran === 'weekly') {
-    const w = rollWeekly(rows, 'within_30min_pct', 'mean');
-    labels = w.map(r => 'wk ' + r.date.slice(5));
-    dataset = w.map(r => r.value);
-    label = 'Within-30 % (weekly avg)';
-  } else {
-    labels = rows.map(r => r.date.slice(5));
-    dataset = rows.map(r => r.within_30min_pct);
-    label = 'Within-30 %';
-  }
-
-  const ctx = document.getElementById('chart-target').getContext('2d');
-  charts.target = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels,
-      datasets: [
-        {
-          label, data: dataset, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)',
-          tension: 0.25, fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
-        },
-        {
-          label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT),
-          borderColor: '#059669', borderDash: [6, 4], pointRadius: 0, fill: false,
-        },
-      ],
-    },
-    options: {
-      maintainAspectRatio: false, responsive: true,
-      plugins: {
-        legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } },
-        tooltip: { callbacks: { label: c => c.dataset.label + ': ' + c.parsed.y.toFixed(1) + '%' } },
-        datalabels: { display: false },
-      },
-      scales: {
-        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-      },
-    },
-  });
-}
-
-/* ─────────────────────────── Tab 1: service-latest table ─────────────────────────── */
-function renderServiceLatestTable() {
-  const tbody = document.querySelector('#service-latest-table tbody');
-  if (!dailyData.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No data</td></tr>'; return; }
-  const latest = dailyData[dailyData.length - 1].date;
-  const rows = serviceData.filter(r => r.date === latest);
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ' + latest + '</td></tr>'; return; }
-  tbody.innerHTML = SVC_KEYS.map(svc => {
-    const r = rows.find(x => x.service === svc);
-    if (!r) return '';
-    const okPill = r.within_30min_pct >= TARGET_PCT
-      ? `<span class="kpi-pill pill-green">▲ ${r.within_30min_pct.toFixed(1)}%</span>`
-      : `<span class="kpi-pill pill-red">${r.within_30min_pct.toFixed(1)}%</span>`;
-    return `<tr>
-      <td class="svc-label">${SVC_LABELS[svc]}</td>
-      <td class="num">${r.total_rx}</td>
-      <td class="num">${okPill}</td>
-      <td class="num">${r.avg_wait_min.toFixed(1)}</td>
-      <td class="num">${r.median_wait_min.toFixed(1)}</td>
-    </tr>`;
-  }).join('');
-}
-
-/* ─────────────────────────── Tab 2: intraday dual-axis ─────────────────────────── */
-function initDailyDatePicker() {
-  const picker = document.getElementById('daily-date');
-  if (!intradayData.length) return;
-  const dates = [...new Set(intradayData.map(r => r.date))].sort();
-  const latest = dates[dates.length - 1];
-  picker.min = dates[0];
-  picker.max = latest;
-  picker.value = state.dailyDate || latest;
-  state.dailyDate = picker.value;
-  picker.onchange = () => { state.dailyDate = picker.value; renderDaily(); };
-}
-
-function renderDaily() {
-  const date = state.dailyDate;
-  const rows = intradayData.filter(r => r.date === date).sort((a,b) => a.time_bucket.localeCompare(b.time_bucket));
-  const theme = chartTheme();
-
-  // Quick stats
-  const dayDaily = dailyData.find(d => d.date === date);
-  const peak = rows.reduce((p, r) => r.live_patients_peak > p.v ? { v: r.live_patients_peak, t: r.time_bucket } : p, { v: 0, t: '—' });
-  const stats = document.getElementById('daily-quick');
-  if (dayDaily) {
-    stats.innerHTML = `
-      <span class="fl">Total Rx</span><span style="font-family:var(--fm);font-weight:600">${dayDaily.total_rx}</span>
-      <div class="fsep"></div>
-      <span class="fl">Within 30 min</span>
-      <span class="kpi-pill ${dayDaily.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red'}">${dayDaily.within_30min_pct.toFixed(1)}%</span>
-      <div class="fsep"></div>
-      <span class="fl">Peak queue</span><span style="font-family:var(--fm);font-weight:600">${peak.v} @ ${peak.t}</span>
-    `;
-  } else {
-    stats.innerHTML = `<span class="fl" style="color:var(--muted)">No daily summary for ${date}</span>`;
-  }
-
-  destroyChart('intraday');
-  const ctx = document.getElementById('chart-intraday').getContext('2d');
-  charts.intraday = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: rows.map(r => r.time_bucket),
-      datasets: [
-        {
-          label: 'Avg wait (min)', data: rows.map(r => r.avg_wait_served_min),
-          borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)',
-          tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
-        },
-        {
-          label: 'Live patients (peak)', data: rows.map(r => r.live_patients_peak),
-          borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)',
-          tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, pointBackgroundColor: '#D97706',
-        },
-      ],
-    },
-    options: {
-      maintainAspectRatio: false, responsive: true,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
-      scales: {
-        x:  { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Time of day', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
-        y:  { type: 'linear', position: 'left',  ticks: { color: '#0891B2', callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Avg wait (min)', color: '#0891B2', font: { family: 'Figtree', weight: '600' } } },
-        y1: { type: 'linear', position: 'right', ticks: { color: '#D97706', font: { family: 'Noto Sans Mono' } }, grid: { display: false }, title: { display: true, text: 'Live patients', color: '#D97706', font: { family: 'Figtree', weight: '600' } } },
-      },
-    },
-  });
-}
-
-/* ─────────────────────────── Tab 3: trends ─────────────────────────── */
+/* ─────────────────────────── Tab 1: trend charts ─────────────────────────── */
 function renderTrends() {
-  const rows = dailyInRange();
+  const rows  = dailyInRange();
   const theme = chartTheme();
   destroyChart('trendPct');
   destroyChart('trendWait');
 
-  let labels, pctSeries, avgSeries, medSeries;
-  if (state.gran === 'weekly') {
-    const wPct = rollWeekly(rows, 'within_30min_pct', 'mean');
-    const wAvg = rollWeekly(rows, 'avg_wait_min', 'mean');
-    const wMed = rollWeekly(rows, 'median_wait_min', 'mean');
-    labels = wPct.map(r => 'wk ' + r.date.slice(5));
-    pctSeries = wPct.map(r => r.value);
-    avgSeries = wAvg.map(r => r.value);
-    medSeries = wMed.map(r => r.value);
-  } else {
-    labels = rows.map(r => r.date.slice(5));
-    pctSeries = rows.map(r => r.within_30min_pct);
-    avgSeries = rows.map(r => r.avg_wait_min);
-    medSeries = rows.map(r => r.median_wait_min);
-  }
+  const labels    = rows.map(r => r.date.slice(5));
+  const pctSeries = rows.map(r => r.within_30min_pct);
+  const avgSeries = rows.map(r => r.avg_wait_min);
+  const medSeries = rows.map(r => r.median_wait_min);
 
   charts.trendPct = new Chart(document.getElementById('chart-trend-pct').getContext('2d'), {
     type: 'line',
@@ -745,15 +639,112 @@ function renderTrends() {
   });
 }
 
-/* ─────────────────────────── Tab 4: services ─────────────────────────── */
+/* ─────────────────────────── Tab 2: intraday + service table ─────────────────────────── */
+function initDailyDatePicker() {
+  const picker = document.getElementById('daily-date');
+  if (!intradayData.length) return;
+  const dates  = [...new Set(intradayData.map(r => r.date))].sort();
+  const latest = dates[dates.length - 1];
+  picker.min = dates[0];
+  picker.max = latest;
+  picker.value = state.dailyDate || latest;
+  state.dailyDate = picker.value;
+  picker.onchange = () => { state.dailyDate = picker.value; renderDaily(); };
+}
+
+function renderDaily() {
+  const date  = state.dailyDate;
+  const rows  = intradayData.filter(r => r.date === date);
+  const theme = chartTheme();
+
+  const byBucket = Object.fromEntries(rows.map(r => [r.time_bucket, r]));
+  const waitData = INTRADAY_BUCKETS.map(b => byBucket[b] ? byBucket[b].avg_wait_served_min : null);
+  const peakData = INTRADAY_BUCKETS.map(b => byBucket[b] ? byBucket[b].live_patients_peak  : null);
+
+  const dayDaily = dailyData.find(d => d.date === date);
+  const peak = rows.reduce((p, r) => r.live_patients_peak > p.v ? { v: r.live_patients_peak, t: r.time_bucket } : p, { v: 0, t: '—' });
+  const stats = document.getElementById('daily-quick');
+  if (dayDaily) {
+    stats.innerHTML = `
+      <span class="fl">Total Rx</span><span style="font-family:var(--fm);font-weight:600">${dayDaily.total_rx}</span>
+      <div class="fsep"></div>
+      <span class="fl">Within 30 min</span>
+      <span class="kpi-pill ${dayDaily.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red'}">${dayDaily.within_30min_pct.toFixed(1)}%</span>
+      <div class="fsep"></div>
+      <span class="fl">Peak queue</span><span style="font-family:var(--fm);font-weight:600">${peak.v} @ ${peak.t}</span>
+    `;
+  } else {
+    stats.innerHTML = `<span class="fl" style="color:var(--muted)">No daily summary for ${date}</span>`;
+  }
+
+  destroyChart('intraday');
+  charts.intraday = new Chart(document.getElementById('chart-intraday').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: INTRADAY_BUCKETS,
+      datasets: [
+        {
+          label: 'Avg wait (min)', data: waitData,
+          borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)',
+          tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
+          spanGaps: false,
+        },
+        {
+          label: 'Live patients (peak)', data: peakData,
+          borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)',
+          tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, pointBackgroundColor: '#D97706',
+          spanGaps: false,
+        },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x:  { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Time of day', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
+        y:  { type: 'linear', position: 'left',  ticks: { color: '#0891B2', callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Avg wait (min)', color: '#0891B2', font: { family: 'Figtree', weight: '600' } } },
+        y1: { type: 'linear', position: 'right', ticks: { color: '#D97706', font: { family: 'Noto Sans Mono' } }, grid: { display: false }, title: { display: true, text: 'Live patients', color: '#D97706', font: { family: 'Figtree', weight: '600' } } },
+      },
+    },
+  });
+
+  renderDailyServiceTable(date);
+}
+
+function renderDailyServiceTable(date) {
+  const label = document.getElementById('daily-svc-date-label');
+  if (label) label.textContent = date;
+  const tbody = document.querySelector('#service-latest-table tbody');
+  const rows  = serviceData.filter(r => r.date === date);
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ${date}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = SVC_KEYS.map(svc => {
+    const r = rows.find(x => x.service === svc);
+    if (!r) return '';
+    const okPill = r.within_30min_pct >= TARGET_PCT
+      ? `<span class="kpi-pill pill-green">▲ ${r.within_30min_pct.toFixed(1)}%</span>`
+      : `<span class="kpi-pill pill-red">${r.within_30min_pct.toFixed(1)}%</span>`;
+    return `<tr>
+      <td class="svc-label">${SVC_LABELS[svc]}</td>
+      <td class="num">${r.total_rx}</td>
+      <td class="num">${okPill}</td>
+      <td class="num">${r.avg_wait_min.toFixed(1)}</td>
+      <td class="num">${r.median_wait_min.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─────────────────────────── Tab 3: service chart + scatter plots ─────────────────────────── */
 function renderServices() {
-  const rows = serviceInRange().filter(r => state.services.has(r.service));
+  const rows  = serviceInRange().filter(r => state.services.has(r.service));
   const theme = chartTheme();
   destroyChart('svc');
 
-  // Build per-date labels (union)
-  const dates = [...new Set(rows.map(r => r.date))].sort();
-  const labels = dates.map(d => d.slice(5));
+  const dates    = [...new Set(rows.map(r => r.date))].sort();
+  const labels   = dates.map(d => d.slice(5));
   const datasets = SVC_KEYS.filter(k => state.services.has(k)).map(svc => {
     const data = dates.map(d => {
       const r = rows.find(x => x.date === d && x.service === svc);
@@ -798,15 +789,86 @@ function renderServices() {
       <td class="num">${medWt.toFixed(1)}</td>
     </tr>`;
   }).join('');
+
+  renderScatterPlots(theme);
+}
+
+function renderScatterPlots(theme) {
+  theme = theme || chartTheme();
+  destroyChart('scatterVol');
+  destroyChart('scatterStaff');
+
+  const volPts   = dailyData.filter(r => r.total_rx > 0 && r.avg_wait_min > 0)
+    .map(r => ({ x: r.total_rx, y: r.avg_wait_min, date: r.date }));
+  const staffPts = dailyData.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0 && r.avg_wait_min > 0)
+    .map(r => ({ x: r.n_PF + r.n_PRP + r.n_PPF, y: r.avg_wait_min, date: r.date }));
+
+  function buildDatasets(pts, color) {
+    const reg = linReg(pts);
+    const datasets = [{
+      label: 'Day',
+      data: pts,
+      backgroundColor: color + '99',
+      pointRadius: 5,
+      pointHoverRadius: 7,
+    }];
+    if (reg) {
+      const xs = pts.map(p => p.x);
+      const xMin = Math.min(...xs), xMax = Math.max(...xs);
+      datasets.push({
+        label: 'Trend',
+        type: 'line',
+        data: [{ x: xMin, y: reg.slope * xMin + reg.intercept }, { x: xMax, y: reg.slope * xMax + reg.intercept }],
+        borderColor: color,
+        borderDash: [5, 3],
+        pointRadius: 0,
+        fill: false,
+      });
+    }
+    return datasets;
+  }
+
+  const scatterOpts = (xLabel) => ({
+    maintainAspectRatio: false, responsive: true,
+    plugins: {
+      legend: { display: false },
+      datalabels: { display: false },
+      tooltip: {
+        callbacks: {
+          label: ctx => {
+            if (ctx.datasetIndex === 0) {
+              const p = ctx.raw;
+              return `${p.date}: ${p.x} ${xLabel === 'Total Rx' ? 'Rx' : 'staff'}, ${p.y.toFixed(1)} min`;
+            }
+            return null;
+          }
+        }
+      }
+    },
+    scales: {
+      x: { title: { display: true, text: xLabel, color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      y: { title: { display: true, text: 'Avg wait (min)', color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+    },
+  });
+
+  charts.scatterVol = new Chart(document.getElementById('chart-scatter-vol').getContext('2d'), {
+    type: 'scatter',
+    data: { datasets: buildDatasets(volPts, '#0891B2') },
+    options: scatterOpts('Total Rx'),
+  });
+
+  charts.scatterStaff = new Chart(document.getElementById('chart-scatter-staff').getContext('2d'), {
+    type: 'scatter',
+    data: { datasets: buildDatasets(staffPts, '#7C3AED') },
+    options: scatterOpts('Total Staff'),
+  });
 }
 
 /* ─────────────────────────── Render orchestrator ─────────────────────────── */
 function renderAll() {
   renderKPIs();
-  renderTargetChart();
-  renderServiceLatestTable();
-  if (state.dailyDate) renderDaily();
   renderTrends();
+  if (state.dailyDate) renderDaily();
   renderServices();
 }
 
@@ -816,22 +878,6 @@ document.querySelectorAll('.tab').forEach(tab => {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
     document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab.dataset.tab));
     state.activeTab = tab.dataset.tab;
-  });
-});
-
-document.querySelectorAll('.range-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.range-btn').forEach(b => b.classList.toggle('active', b === btn));
-    state.range = parseInt(btn.dataset.range, 10);
-    renderTargetChart(); renderTrends(); renderServices();
-  });
-});
-
-document.querySelectorAll('.gran-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.gran-btn').forEach(b => b.classList.toggle('active', b === btn));
-    state.gran = btn.dataset.gran;
-    renderTargetChart(); renderTrends();
   });
 });
 
