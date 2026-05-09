@@ -15,8 +15,6 @@
     --primary:     #0891B2;
     --primary-lt:  #22D3EE;
     --primary-dim: #ECFEFF;
-    --pj:          #059669;
-    --pj-dim:      #D1FAE5;
     --cta:         #D97706;
     --cta-dim:     #FFFBEB;
     --bg:          #F0FDFE;
@@ -34,42 +32,26 @@
     --shadow-sm:   0 1px 4px rgba(8,145,178,0.08), 0 1px 2px rgba(0,0,0,0.04);
     --shadow:      0 4px 16px rgba(8,145,178,0.14), 0 2px 6px rgba(0,0,0,0.06);
     --radius:      12px;
-    --fh:          'Figtree', sans-serif;
-    --fb:          'Noto Sans', sans-serif;
-    --fm:          'Noto Sans Mono', 'Fira Code', monospace;
+    --fh: 'Figtree', sans-serif;
+    --fb: 'Noto Sans', sans-serif;
+    --fm: 'Noto Sans Mono', monospace;
     --stripe:      rgba(186,230,253,.38);
     --hdr-from:    #0C4A6E;
     --hdr-to:      #155E75;
     --tbl-head-bg: linear-gradient(135deg,#ECFEFF 0%,#F0FDFE 100%);
   }
   body.dark-mode {
-    --primary:     #22D3EE;
-    --primary-lt:  #67E8F9;
-    --primary-dim: #0A2030;
-    --pj:          #34D399;
-    --pj-dim:      #042C1A;
-    --cta:         #FBBF24;
-    --cta-dim:     #1A1200;
-    --bg:          #060E1A;
-    --surface:     #0C1A2E;
-    --surface-2:   #0F2040;
-    --border:      #1A3347;
-    --text:        #CEE9F7;
-    --muted:       #6B96AE;
-    --success:     #34D399;
-    --success-dim: #042C1A;
-    --danger:      #F87171;
-    --danger-dim:  #2C0E0E;
-    --warning:     #FBBF24;
-    --warning-dim: #1A1200;
-    --shadow-sm:   0 1px 4px rgba(0,0,0,0.5);
-    --shadow:      0 4px 20px rgba(0,0,0,0.65);
-    --stripe:      rgba(34,211,238,.05);
-    --hdr-from:    #050E1C;
-    --hdr-to:      #091526;
+    --primary: #22D3EE; --primary-lt: #67E8F9; --primary-dim: #0A2030;
+    --cta: #FBBF24; --cta-dim: #1A1200;
+    --bg: #060E1A; --surface: #0C1A2E; --surface-2: #0F2040; --border: #1A3347;
+    --text: #CEE9F7; --muted: #6B96AE;
+    --success: #34D399; --success-dim: #042C1A;
+    --danger: #F87171; --danger-dim: #2C0E0E;
+    --warning: #FBBF24; --warning-dim: #1A1200;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.5); --shadow: 0 4px 20px rgba(0,0,0,0.65);
+    --stripe: rgba(34,211,238,.05); --hdr-from: #050E1C; --hdr-to: #091526;
     --tbl-head-bg: linear-gradient(135deg,#0A2030 0%,#0C1A2E 100%);
   }
-
   body { font-family: var(--fb); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.5; transition: background .3s, color .3s; }
 
   /* Header */
@@ -77,8 +59,7 @@
     background: linear-gradient(135deg, var(--hdr-from) 0%, var(--hdr-to) 100%);
     color: #fff; padding: 0 28px; height: 58px;
     display: flex; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+    position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.35);
   }
   .header-left { display: flex; align-items: center; gap: 14px; }
   .hbadge { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); font-family: var(--fh); font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 6px; letter-spacing: .7px; color: #BAE6FD; }
@@ -98,9 +79,8 @@
   /* Filter bar */
   .filter-bar {
     background: var(--surface); border-bottom: 1px solid var(--border);
-    padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 16px;
-    align-items: center; box-shadow: 0 1px 4px rgba(8,145,178,0.07);
-    position: sticky; top: 58px; z-index: 99;
+    padding: 10px 28px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+    box-shadow: 0 1px 4px rgba(8,145,178,0.07); position: sticky; top: 58px; z-index: 99;
   }
   .fg { display: flex; align-items: center; gap: 6px; }
   .fl { font-family: var(--fh); font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .8px; white-space: nowrap; }
@@ -113,12 +93,12 @@
   }
   .toggle-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
   .toggle-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-  input[type="date"], select {
+  input[type="date"] {
     padding: 6px 10px; border-radius: 6px; border: 1.5px solid var(--border);
     font-size: 12px; color: var(--text); background: var(--surface);
     font-family: var(--fh); font-weight: 500; cursor: pointer;
   }
-  input[type="date"]:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
+  input[type="date"]:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
 
   /* Tab bar */
   .tab-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 10px 28px; display: flex; gap: 6px; overflow-x: auto; }
@@ -151,28 +131,37 @@
   .pill-red   { background: var(--danger-dim);  color: var(--danger); }
   .pill-warn  { background: var(--warning-dim); color: var(--warning); }
   .pill-blue  { background: var(--primary-dim); color: var(--primary); }
-  .kpi-divider { border-top: 1px solid var(--border); margin: 10px 0 8px; }
+  .kpi-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0 8px; }
   .kpi-month-label { font-family: var(--fh); font-size: 9px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
-  .kpi-month-value { font-family: var(--fh); font-size: 15px; font-weight: 700; color: var(--text); }
-  .kpi-month-unit  { font-size: 11px; font-weight: 500; color: var(--muted); }
+  .kpi-month-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .kpi-month-key  { font-size: 10px; color: var(--muted); font-family: var(--fb); }
+  .kpi-month-val  { font-family: var(--fh); font-size: 13px; font-weight: 700; color: var(--text); }
+  .kpi-month-unit-sm { font-size: 10px; font-weight: 500; color: var(--muted); }
 
   /* Chart cards */
   .row { display: grid; gap: 16px; margin-bottom: 16px; }
   .card { background: var(--surface); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow-sm); }
-  .card h3 { font-family: var(--fh); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .card h3 .sub { font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+  .card h3 { font-family: var(--fh); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .card h3 .sub { font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; flex: 1; }
   .chart-wrap { position: relative; height: 320px; }
   .chart-wrap.tall { height: 380px; }
+  .export-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    padding: 3px 9px; border-radius: 5px; font-size: 10px; font-weight: 700;
+    cursor: pointer; font-family: var(--fh); letter-spacing: .3px; transition: all .15s;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .export-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
 
   /* Tables */
-  table { width: 100%; border-collapse: collapse; font-size: 13px; font-family: var(--fb); }
-  thead th { background: var(--tbl-head-bg); color: var(--text); font-family: var(--fh); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
-  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-family: var(--fm); font-size: 13px; }
+  .tbl-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { background: var(--tbl-head-bg); color: var(--text); font-family: var(--fh); font-weight: 700; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; white-space: nowrap; }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-family: var(--fm); font-size: 13px; white-space: nowrap; }
   tbody tr:nth-child(odd) td { background: var(--stripe); }
   tbody tr:hover td { background: var(--primary-dim); }
   td.svc-label, th.svc-label { font-family: var(--fh); font-weight: 600; }
-  td.num { text-align: right; }
-  th.num { text-align: right; }
+  td.num, th.num { text-align: right; }
 
   /* Loading + error */
   #loading {
@@ -186,12 +175,22 @@
   #error-banner { background: var(--danger-dim); color: var(--danger); padding: 12px 28px; font-weight: 700; font-family: var(--fh); display: none; }
   #error-banner.visible { display: block; }
 
-  /* Embed mode for Google Sites iframe */
+  /* Embed mode */
   body.embed-mode .header { position: relative; top: auto; }
   body.embed-mode .filter-bar { position: relative; top: auto; }
 
+  /* Tab 2 quick stats */
+  .quick-stats { display: flex; flex-wrap: wrap; gap: 18px; align-items: center; }
+  .qs-item { display: flex; flex-direction: column; gap: 3px; }
+  .qs-label { font-family: var(--fh); font-size: 10px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .8px; }
+  .qs-value { font-family: var(--fm); font-size: 17px; font-weight: 700; color: var(--text); line-height: 1; }
+  .qs-value small { font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+
+  /* Range info badge */
+  .range-info { font-family: var(--fh); font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 10px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
+
   @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
-  @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } .page { padding: 16px; } .header { padding: 0 16px; } .filter-bar { padding: 10px 16px; } .tab-bar { padding: 10px 16px; } }
+  @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } .page { padding: 16px; } .header, .filter-bar, .tab-bar { padding-left: 16px; padding-right: 16px; } }
 </style>
 </head>
 <body>
@@ -208,8 +207,8 @@
   </div>
   <div class="header-right">
     <span id="last-updated"></span>
-    <button id="refresh-btn" title="Refresh data">↻ Refresh</button>
-    <button id="dark-toggle" title="Toggle dark mode">🌙</button>
+    <button id="refresh-btn">↻ Refresh</button>
+    <button id="dark-toggle">🌙</button>
   </div>
 </header>
 
@@ -225,6 +224,14 @@
     <span class="fl">To</span>
     <input type="date" id="to-date">
   </div>
+  <div class="fsep"></div>
+  <div class="fg" style="gap:4px;">
+    <span class="fl">Quick</span>
+    <button class="toggle-btn" onclick="applyPreset(7)">7d</button>
+    <button class="toggle-btn" onclick="applyPreset(30)">30d</button>
+    <button class="toggle-btn" onclick="applyPreset('mtd')">MTD</button>
+  </div>
+  <span class="range-info" id="range-info"></span>
 </div>
 
 <div class="tab-bar">
@@ -235,27 +242,78 @@
 
 <main class="page">
 
-  <!-- ────────────────────────── Tab 1 : Waiting Time ────────────────────────── -->
+  <!-- Tab 1: Waiting Time -->
   <section class="panel active" id="panel-health">
     <div class="kpi-grid" id="kpi-grid"></div>
-    <div class="row" style="grid-template-columns: 1fr;">
+
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Within-30-min %  <span class="sub">vs 95% target · selected range</span></h3>
+        <h3>Within-30-min % <span class="sub">vs 95% target · selected range</span>
+          <button class="export-btn" onclick="exportChart('trendPct','within-30min-trend')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-trend-pct"></canvas></div>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr;">
+
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Average &amp; median waiting time  <span class="sub">minutes · selected range</span></h3>
+        <h3>Average &amp; median waiting time <span class="sub">minutes · selected range</span>
+          <button class="export-btn" onclick="exportChart('trendWait','wait-trend')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-trend-wait"></canvas></div>
+      </div>
+    </div>
+
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3>Token Summary <span class="sub" id="token-sum-date-label"></span>
+          <button class="export-btn" onclick="exportTableCSV('token-summary-table','token-summary')">⬇ CSV</button></h3>
+        <div class="tbl-scroll">
+          <table id="token-summary-table">
+            <thead><tr>
+              <th class="svc-label">Token</th>
+              <th class="num">Tickets</th>
+              <th class="num">Transactions</th>
+              <th class="num">Renegade</th>
+              <th class="num">Wait Min</th>
+              <th class="num">Wait Avg</th>
+              <th class="num">Wait Max</th>
+              <th class="num">Serve Avg</th>
+              <th class="num">Meet Target (Wait)</th>
+              <th class="num">Meet Target (Serve)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3>Waiting Time Distribution <span class="sub" id="wait-dist-date-label"></span>
+          <button class="export-btn" onclick="exportTableCSV('wait-dist-table','wait-distribution')">⬇ CSV</button></h3>
+        <div class="tbl-scroll">
+          <table id="wait-dist-table">
+            <thead><tr>
+              <th></th>
+              <th class="num">&lt; 10 min</th>
+              <th class="num">10 – 20 min</th>
+              <th class="num">20 – 30 min</th>
+              <th class="num">30 – 40 min</th>
+              <th class="num">40 – 50 min</th>
+              <th class="num">50 – 60 min</th>
+              <th class="num">&gt; 60 min</th>
+              <th class="num">Total</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ────────────────────────── Tab 2 : Daily Operations ────────────────────────── -->
+  <!-- Tab 2: Daily Operations -->
   <section class="panel" id="panel-daily">
-    <div class="row" style="grid-template-columns: 1fr; align-items: end;">
-      <div class="card" style="display: flex; flex-wrap: wrap; gap: 14px; align-items: center;">
+    <div class="row" style="grid-template-columns:1fr; align-items:end;">
+      <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
         <div class="fg">
           <span class="fl">Day</span>
           <input type="date" id="daily-date">
@@ -264,15 +322,17 @@
         <div class="fg" id="daily-quick"></div>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr;">
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Intraday wait time &amp; queue length  <span class="sub">30-min buckets</span></h3>
+        <h3>Intraday wait time &amp; queue length <span class="sub">30-min buckets</span>
+          <button class="export-btn" onclick="exportChart('intraday','intraday-chart')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr;">
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Service-level performance  <span class="sub" id="daily-svc-date-label"></span></h3>
+        <h3>Service-level performance <span class="sub" id="daily-svc-date-label"></span>
+          <button class="export-btn" onclick="exportTableCSV('service-latest-table','service-performance')">⬇ CSV</button></h3>
         <table id="service-latest-table">
           <thead><tr>
             <th class="svc-label">Service</th>
@@ -287,25 +347,27 @@
     </div>
   </section>
 
-  <!-- ────────────────────────── Tab 3 : Service Insight ────────────────────────── -->
+  <!-- Tab 3: Service Insight -->
   <section class="panel" id="panel-services">
-    <div class="row" style="grid-template-columns: 1fr;">
-      <div class="card" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
         <span class="fl">Services</span>
         <button class="toggle-btn svc-btn active" data-svc="KURANG3">Kurang 3 / OKU</button>
         <button class="toggle-btn svc-btn active" data-svc="LEBIH3">Lebih 3</button>
         <button class="toggle-btn svc-btn active" data-svc="BMSONLY">Ulangan</button>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr;">
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Within-30-min % per service  <span class="sub">target line at 95%</span></h3>
+        <h3>Within-30-min % per service <span class="sub">target line at 95%</span>
+          <button class="export-btn" onclick="exportChart('svc','service-pct-chart')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-svc"></canvas></div>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr;">
+    <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Service summary · selected range</h3>
+        <h3>Service summary · selected range
+          <button class="export-btn" onclick="exportTableCSV('service-range-table','service-summary')">⬇ CSV</button></h3>
         <table id="service-range-table">
           <thead><tr>
             <th class="svc-label">Service</th>
@@ -318,13 +380,24 @@
         </table>
       </div>
     </div>
-    <div class="row" style="grid-template-columns: 1fr 1fr;">
+
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <span class="fl">Staff type (scatter)</span>
+        <button class="toggle-btn staff-btn active" data-staff="PF">Pharmacist (PF)</button>
+        <button class="toggle-btn staff-btn active" data-staff="PRP">PRP</button>
+        <button class="toggle-btn staff-btn active" data-staff="PPF">PPF / Trainee</button>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr 1fr;">
       <div class="card">
-        <h3>Daily Volume vs Average Wait  <span class="sub">all time</span></h3>
+        <h3>Daily Volume vs % Within 30 min <span class="sub">all time · each dot = 1 day</span>
+          <button class="export-btn" onclick="exportChart('scatterVol','volume-vs-pct')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-scatter-vol"></canvas></div>
       </div>
       <div class="card">
-        <h3>Daily Staffing vs Average Wait  <span class="sub">days with staff data</span></h3>
+        <h3>Daily Staffing vs % Within 30 min <span class="sub">days with staff data</span>
+          <button class="export-btn" onclick="exportChart('scatterStaff','staff-vs-pct')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-scatter-staff"></canvas></div>
       </div>
     </div>
@@ -333,11 +406,13 @@
 </main>
 
 <script>
-/* ─────────────────────────── Configuration ─────────────────────────── */
-const SHEET_ID = '1yIIm_lbopIggu0BjnBVmxtgTTT1F2pNP7YPSpSCJ1mc';
+/* ─── Configuration ─── */
+const SHEET_ID       = '1yIIm_lbopIggu0BjnBVmxtgTTT1F2pNP7YPSpSCJ1mc';
 const SHEET_DAILY    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=daily_summary`;
 const SHEET_SERVICE  = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=service_summary`;
 const SHEET_INTRADAY = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=intraday`;
+const SHEET_TOKEN    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=token_summary`;
+const SHEET_WD       = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=wait_dist`;
 
 const TARGET_PCT = 95;
 const SVC_LABELS = { KURANG3: 'Kurang 3 / OKU', LEBIH3: 'Lebih 3', BMSONLY: 'Ulangan' };
@@ -350,17 +425,23 @@ const INTRADAY_BUCKETS = [
   '14:30','15:00','15:30','16:00','16:30','17:00','17:30'
 ];
 
-let dailyData = [], serviceData = [], intradayData = [];
+let dailyData = [], serviceData = [], intradayData = [], tokenSummaryData = [], waitDistData = [];
 const charts = {};
-const state = { fromDate: null, toDate: null, activeTab: 'health', services: new Set(SVC_KEYS), dailyDate: null };
+const state = {
+  fromDate: null, toDate: null,
+  activeTab: 'health',
+  services: new Set(SVC_KEYS),
+  staffTypes: new Set(['PF', 'PRP', 'PPF']),
+  dailyDate: null
+};
 
-/* ─────────────────────────── JSONP fetch ─────────────────────────── */
+/* ─── JSONP fetch ─── */
 let _cb = 0;
 function gvizFetch(url) {
   return new Promise((resolve, reject) => {
     const cbName = '__gviz_cb_' + (++_cb);
     const script = document.createElement('script');
-    const timer  = setTimeout(() => { cleanup(); reject(new Error('Request timed out')); }, 15000);
+    const timer  = setTimeout(() => { cleanup(); reject(new Error('Timeout')); }, 15000);
     function cleanup() { clearTimeout(timer); delete window[cbName]; if (script.parentNode) script.remove(); }
     window[cbName] = function(data) {
       cleanup();
@@ -368,74 +449,103 @@ function gvizFetch(url) {
         const cols = data.table.cols.map(c => (c.label || c.id || '').trim());
         const rows = (data.table.rows || []).map(r => {
           const obj = {};
-          (r.c || []).forEach((cell, i) => {
-            obj[cols[i]] = cell && cell.v !== null && cell.v !== undefined ? cell.v : '';
-          });
+          (r.c || []).forEach((cell, i) => { obj[cols[i]] = (cell && cell.v !== null && cell.v !== undefined) ? cell.v : ''; });
           return obj;
         });
         resolve(rows);
       } catch (e) { reject(new Error('Sheet parse failed: ' + e.message)); }
     };
-    script.onerror = () => { cleanup(); reject(new Error('Failed to load sheet — is the sheet published and the SHEET_ID correct?')); };
+    script.onerror = () => { cleanup(); reject(new Error('Failed to load sheet')); };
     script.src = url + '&tqx=responseHandler:' + cbName;
     document.head.appendChild(script);
   });
 }
 
-function num(v) { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; }
-function str(v) { return v === null || v === undefined ? '' : String(v).trim(); }
+function num(v)  { if (v === null || v === undefined || v === '') return 0; const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; }
+function str(v)  { return v === null || v === undefined ? '' : String(v).trim(); }
 
 function parseDate(v) {
   if (!v) return '';
   if (v instanceof Date) return v.toISOString().slice(0, 10);
   const s = String(v);
   const m = s.match(/^Date\((\d+),(\d+),(\d+)/);
-  if (m) {
-    const y = +m[1], mo = +m[2] + 1, d = +m[3];
-    return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  }
+  if (m) return `${m[1]}-${String(+m[2]+1).padStart(2,'0')}-${String(+m[3]).padStart(2,'0')}`;
   if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
   return s;
 }
 
-/* ─────────────────────────── Data load ─────────────────────────── */
+/* Normalize time_bucket: handles "7:30", "07:30", "7:30 AM", numeric fraction (0.3125) */
+function normalizeBucket(v) {
+  if (v === null || v === undefined || v === '') return '';
+  if (typeof v === 'number') {
+    const totalMin = Math.round(v * 24 * 60);
+    return `${String(Math.floor(totalMin / 60)).padStart(2,'0')}:${String(totalMin % 60).padStart(2,'0')}`;
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d+):(\d+)(?::\d+)?\s*(AM|PM)?$/i);
+  if (!m) return s;
+  let h = parseInt(m[1], 10);
+  const min = m[2];
+  const ap = m[3] ? m[3].toUpperCase() : null;
+  if (ap === 'PM' && h < 12) h += 12;
+  if (ap === 'AM' && h === 12) h = 0;
+  return `${String(h).padStart(2,'0')}:${min}`;
+}
+
+/* ─── Data load ─── */
 async function loadData() {
   document.getElementById('loading').classList.remove('hidden');
   document.getElementById('refresh-btn').disabled = true;
   document.getElementById('error-banner').classList.remove('visible');
-
   try {
-    const [d, s, i] = await Promise.all([
+    const [d, s, i, tok, wd] = await Promise.all([
       gvizFetch(SHEET_DAILY),
       gvizFetch(SHEET_SERVICE),
       gvizFetch(SHEET_INTRADAY),
+      gvizFetch(SHEET_TOKEN).catch(() => []),
+      gvizFetch(SHEET_WD).catch(() => []),
     ]);
+
     dailyData = d.map(r => ({
       date: parseDate(r.date),
-      total_rx: num(r.total_rx),
-      within_30min_pct: num(r.within_30min_pct),
-      avg_wait_min: num(r.avg_wait_min),
-      median_wait_min: num(r.median_wait_min),
-      n_PF: num(r.n_PF),
-      n_PRP: num(r.n_PRP),
-      n_PPF: num(r.n_PPF),
+      total_rx: num(r.total_rx), within_30min_pct: num(r.within_30min_pct),
+      avg_wait_min: num(r.avg_wait_min), median_wait_min: num(r.median_wait_min),
+      n_PF: num(r.n_PF), n_PRP: num(r.n_PRP), n_PPF: num(r.n_PPF),
     })).filter(r => r.date).sort((a,b) => a.date.localeCompare(b.date));
 
     serviceData = s.map(r => ({
-      date: parseDate(r.date),
-      service: str(r.service),
-      total_rx: num(r.total_rx),
-      within_30min_pct: num(r.within_30min_pct),
-      avg_wait_min: num(r.avg_wait_min),
-      median_wait_min: num(r.median_wait_min),
+      date: parseDate(r.date), service: str(r.service),
+      total_rx: num(r.total_rx), within_30min_pct: num(r.within_30min_pct),
+      avg_wait_min: num(r.avg_wait_min), median_wait_min: num(r.median_wait_min),
     })).filter(r => r.date && r.service);
 
+    function orNull(v) { const n = parseFloat(String(v).replace(/[,%\s]/g,'')); return isNaN(n) || v === '' ? null : n; }
     intradayData = i.map(r => ({
       date: parseDate(r.date),
-      time_bucket: str(r.time_bucket),
-      avg_wait_served_min: num(r.avg_wait_served_min),
-      live_patients_peak: num(r.live_patients_peak),
+      time_bucket: normalizeBucket(r.time_bucket),
+      avg_wait_served_min: orNull(r.avg_wait_served_min),
+      live_patients_peak:  orNull(r.live_patients_peak),
     })).filter(r => r.date && r.time_bucket);
+
+    tokenSummaryData = tok.map(r => ({
+      date: parseDate(r.date), token: str(r.token),
+      tickets: num(r.tickets), total_tx: num(r.total_tx), renegade: num(r.renegade),
+      wait_min: str(r.wait_min), wait_avg: str(r.wait_avg), wait_max: str(r.wait_max),
+      serve_avg: str(r.serve_avg),
+      pct_wait: num(r.pct_wait), pct_serve: num(r.pct_serve),
+    })).filter(r => r.date && r.token);
+
+    waitDistData = wd.map(r => ({
+      date: parseDate(r.date),
+      lt10: num(r.lt10), lt10p: num(r.lt10p),
+      m10_20: num(r.m10_20), m10_20p: num(r.m10_20p),
+      m20_30: num(r.m20_30), m20_30p: num(r.m20_30p),
+      m30_40: num(r.m30_40), m30_40p: num(r.m30_40p),
+      m40_50: num(r.m40_50), m40_50p: num(r.m40_50p),
+      m50_60: num(r.m50_60), m50_60p: num(r.m50_60p),
+      gt60: num(r.gt60), gt60p: num(r.gt60p),
+      total: num(r.total),
+    })).filter(r => r.date);
 
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleString('en-MY', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -444,21 +554,17 @@ async function loadData() {
     initDailyDatePicker();
     renderAll();
   } catch (err) {
-    const banner = document.getElementById('error-banner');
-    banner.textContent = '⚠ ' + err.message;
-    banner.classList.add('visible');
+    const b = document.getElementById('error-banner');
+    b.textContent = '⚠ ' + err.message; b.classList.add('visible');
   } finally {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('refresh-btn').disabled = false;
   }
 }
 
-/* ─────────────────────────── Helpers ─────────────────────────── */
-function inRange(d) {
-  if (!state.fromDate || !state.toDate) return true;
-  return d >= state.fromDate && d <= state.toDate;
-}
-function dailyInRange() { return dailyData.filter(r => inRange(r.date)); }
+/* ─── Helpers ─── */
+function inRange(d) { return (!state.fromDate || !state.toDate) || (d >= state.fromDate && d <= state.toDate); }
+function dailyInRange()   { return dailyData.filter(r => inRange(r.date)); }
 function serviceInRange() { return serviceData.filter(r => inRange(r.date)); }
 
 function monthlyStats() {
@@ -467,13 +573,22 @@ function monthlyStats() {
   const ym = latest.date.slice(0, 7);
   const month = dailyData.filter(r => r.date.startsWith(ym));
   if (!month.length) return null;
-  const totalRx  = month.reduce((s, r) => s + r.total_rx, 0);
-  const avgPct   = month.reduce((s, r) => s + r.within_30min_pct, 0) / month.length;
-  const avgWait  = month.reduce((s, r) => s + r.avg_wait_min, 0) / month.length;
-  const medWait  = month.reduce((s, r) => s + r.median_wait_min, 0) / month.length;
+  const daysCount = month.length;
+  const totalRx   = month.reduce((s, r) => s + r.total_rx, 0);
+  const avgPct    = month.reduce((s, r) => s + r.within_30min_pct, 0) / daysCount;
+  const avgWait   = month.reduce((s, r) => s + r.avg_wait_min, 0) / daysCount;
+  const medWait   = month.reduce((s, r) => s + r.median_wait_min, 0) / daysCount;
   const staffRows = month.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0);
-  const avgStaff  = staffRows.length ? staffRows.reduce((s, r) => s + r.n_PF + r.n_PRP + r.n_PPF, 0) / staffRows.length : null;
-  return { totalRx, avgPct, avgWait, medWait, avgStaff, ym };
+  const avgStaff  = staffRows.length ? staffRows.reduce((s,r) => s + r.n_PF + r.n_PRP + r.n_PPF, 0) / staffRows.length : null;
+  return { totalRx, avgPct, avgWait, medWait, avgStaff, daysCount, ym };
+}
+
+function staffTotal(r) {
+  let t = 0;
+  if (state.staffTypes.has('PF'))  t += r.n_PF;
+  if (state.staffTypes.has('PRP')) t += r.n_PRP;
+  if (state.staffTypes.has('PPF')) t += r.n_PPF;
+  return t;
 }
 
 function linReg(points) {
@@ -489,53 +604,105 @@ function linReg(points) {
 }
 
 function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
-
 function chartTheme() {
   const cs = getComputedStyle(document.body);
-  return {
-    text:   cs.getPropertyValue('--text').trim(),
-    muted:  cs.getPropertyValue('--muted').trim(),
-    grid:   cs.getPropertyValue('--border').trim(),
-    bg:     cs.getPropertyValue('--surface').trim(),
-  };
+  return { text: cs.getPropertyValue('--text').trim(), muted: cs.getPropertyValue('--muted').trim(), grid: cs.getPropertyValue('--border').trim() };
 }
 
-/* ─────────────────────────── Date range init ─────────────────────────── */
+function pill(pct) {
+  return pct >= TARGET_PCT
+    ? `<span class="kpi-pill pill-green">${pct.toFixed(1)}%</span>`
+    : `<span class="kpi-pill pill-red">${pct.toFixed(1)}%</span>`;
+}
+
+/* ─── Export helpers ─── */
+function exportChart(chartKey, filename) {
+  const c = charts[chartKey];
+  if (!c) return;
+  const a = document.createElement('a');
+  a.href = c.canvas.toDataURL('image/png');
+  a.download = filename + '_' + new Date().toISOString().slice(0,10) + '.png';
+  a.click();
+}
+function exportTableCSV(tableId, filename) {
+  const t = document.getElementById(tableId);
+  if (!t) return;
+  const rows = [];
+  t.querySelectorAll('tr').forEach(tr => {
+    const cells = [...tr.querySelectorAll('th,td')].map(c => '"' + c.innerText.replace(/"/g,'""') + '"');
+    rows.push(cells.join(','));
+  });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+/* ─── Date range init ─── */
+function updateRangeInfo() {
+  const el = document.getElementById('range-info');
+  if (!el || !state.fromDate || !state.toDate) return;
+  const days = Math.round((new Date(state.toDate) - new Date(state.fromDate)) / 86400000) + 1;
+  const fmt  = d => new Date(d).toLocaleDateString('en-MY', { day: '2-digit', month: 'short' });
+  el.textContent = `${days}d · ${fmt(state.fromDate)} – ${fmt(state.toDate)}`;
+}
+
+function applyPreset(n) {
+  if (!dailyData.length) return;
+  const latest = dailyData[dailyData.length - 1].date;
+  let from;
+  if (n === 'mtd') {
+    from = latest.slice(0, 7) + '-01';
+  } else {
+    const d = new Date(latest); d.setDate(d.getDate() - (n - 1));
+    from = d.toISOString().slice(0, 10);
+  }
+  state.fromDate = from; state.toDate = latest;
+  document.getElementById('from-date').value = from;
+  document.getElementById('to-date').value   = latest;
+  updateRangeInfo();
+  renderTrends(); renderServices();
+}
+
 function initDateRange() {
   if (!dailyData.length) return;
   const latest = dailyData[dailyData.length - 1].date;
-  const from30 = new Date(latest);
-  from30.setDate(from30.getDate() - 29);
+  const from30 = new Date(latest); from30.setDate(from30.getDate() - 29);
   const fromStr = from30.toISOString().slice(0, 10);
-
-  const fromEl = document.getElementById('from-date');
-  const toEl   = document.getElementById('to-date');
-  fromEl.value = state.fromDate || fromStr;
-  toEl.value   = state.toDate   || latest;
+  const fromEl  = document.getElementById('from-date');
+  const toEl    = document.getElementById('to-date');
+  fromEl.value  = state.fromDate || fromStr;
+  toEl.value    = state.toDate   || latest;
   state.fromDate = fromEl.value;
   state.toDate   = toEl.value;
-
-  fromEl.onchange = () => { state.fromDate = fromEl.value; renderTrends(); renderServices(); };
-  toEl.onchange   = () => { state.toDate   = toEl.value;  renderTrends(); renderServices(); };
+  updateRangeInfo();
+  fromEl.onchange = () => { state.fromDate = fromEl.value; updateRangeInfo(); renderTrends(); renderServices(); };
+  toEl.onchange   = () => { state.toDate   = toEl.value;  updateRangeInfo(); renderTrends(); renderServices(); };
 }
 
-/* ─────────────────────────── KPI cards (Tab 1) ─────────────────────────── */
+/* ─── KPI cards ─── */
 function renderKPIs() {
   const grid = document.getElementById('kpi-grid');
   if (!dailyData.length) { grid.innerHTML = '<div class="card">No data yet.</div>'; return; }
-  const latest  = dailyData[dailyData.length - 1];
-  const within  = latest.within_30min_pct;
+  const latest    = dailyData[dailyData.length - 1];
+  const within    = latest.within_30min_pct;
   const targetMet = within >= TARGET_PCT;
-  const staffTotal = latest.n_PF + latest.n_PRP + latest.n_PPF;
+  const staffTot  = latest.n_PF + latest.n_PRP + latest.n_PPF;
   const mo = monthlyStats();
-  const mLabel = mo ? mo.ym.replace('-', '/') + ' avg' : '';
+  const mLabel = mo ? mo.ym.replace('-', '/') : '';
 
-  function monthSub(value, unit) {
+  function moSection(rows) {
     if (!mo) return '';
-    return `<div class="kpi-divider"></div>
-      <div class="kpi-month-label">${mLabel}</div>
-      <div class="kpi-month-value">${value}<span class="kpi-month-unit"> ${unit}</span></div>`;
+    return `<hr class="kpi-divider">
+      <div class="kpi-month-label">${mLabel} month</div>
+      ${rows.map(([k,v,u]) => `<div class="kpi-month-row">
+        <span class="kpi-month-key">${k}</span>
+        <span class="kpi-month-val">${v}<span class="kpi-month-unit-sm"> ${u}</span></span>
+      </div>`).join('')}`;
   }
+
+  const avgRxPerDay = mo ? Math.round(mo.totalRx / mo.daysCount) : null;
 
   const cards = [
     {
@@ -543,10 +710,8 @@ function renderKPIs() {
       label: 'Within 30 min',
       value: within.toFixed(1), unit: '%',
       sub: `Latest: ${latest.date}`,
-      pill: targetMet
-        ? `<span class="kpi-pill pill-green">▲ on target</span>`
-        : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT - within).toFixed(1)}% below</span>`,
-      month: mo ? monthSub(mo.avgPct.toFixed(1), '%') : '',
+      pill: targetMet ? `<span class="kpi-pill pill-green">▲ on target</span>` : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT-within).toFixed(1)}% below</span>`,
+      mo: moSection([['Avg %', mo ? mo.avgPct.toFixed(1) : '-', '%']]),
     },
     {
       cls: '',
@@ -554,31 +719,29 @@ function renderKPIs() {
       value: latest.total_rx.toLocaleString(), unit: '',
       sub: `Latest: ${latest.date}`,
       pill: '',
-      month: mo ? monthSub(mo.totalRx.toLocaleString(), 'this month') : '',
+      mo: mo ? moSection([['Avg/day', avgRxPerDay.toLocaleString(), 'Rx'], ['Month total', mo.totalRx.toLocaleString(), 'Rx']]) : '',
     },
     {
       cls: latest.avg_wait_min <= 30 ? 'green' : 'warn',
       label: 'Avg wait',
       value: latest.avg_wait_min.toFixed(1), unit: 'min',
-      sub: '',
-      pill: '',
-      month: mo ? monthSub(mo.avgWait.toFixed(1), 'min') : '',
+      sub: '', pill: '',
+      mo: moSection([['Avg', mo ? mo.avgWait.toFixed(1) : '-', 'min']]),
     },
     {
       cls: latest.median_wait_min <= 30 ? 'green' : 'warn',
       label: 'Median wait',
       value: latest.median_wait_min.toFixed(1), unit: 'min',
-      sub: '',
-      pill: '',
-      month: mo ? monthSub(mo.medWait.toFixed(1), 'min') : '',
+      sub: '', pill: '',
+      mo: moSection([['Avg median', mo ? mo.medWait.toFixed(1) : '-', 'min']]),
     },
     {
       cls: '',
       label: 'Staff on duty',
-      value: staffTotal || '—', unit: '',
+      value: staffTot || '—', unit: '',
       sub: `PF ${latest.n_PF} · PRP ${latest.n_PRP} · PPF ${latest.n_PPF}`,
       pill: '',
-      month: mo && mo.avgStaff !== null ? monthSub(mo.avgStaff.toFixed(1), 'avg') : '',
+      mo: mo && mo.avgStaff !== null ? moSection([['Avg total', mo.avgStaff.toFixed(1), 'staff']]) : '',
     },
   ];
 
@@ -588,18 +751,15 @@ function renderKPIs() {
       <div class="kpi-value">${c.value}${c.unit ? `<span class="kpi-unit">${c.unit}</span>` : ''}</div>
       ${c.sub ? `<div class="kpi-sub">${c.sub}</div>` : ''}
       ${c.pill}
-      ${c.month}
-    </div>
-  `).join('');
+      ${c.mo}
+    </div>`).join('');
 }
 
-/* ─────────────────────────── Tab 1: trend charts ─────────────────────────── */
+/* ─── Tab 1: trend charts ─── */
 function renderTrends() {
   const rows  = dailyInRange();
   const theme = chartTheme();
-  destroyChart('trendPct');
-  destroyChart('trendWait');
-
+  destroyChart('trendPct'); destroyChart('trendWait');
   const labels    = rows.map(r => r.date.slice(5));
   const pctSeries = rows.map(r => r.within_30min_pct);
   const avgSeries = rows.map(r => r.avg_wait_min);
@@ -608,45 +768,100 @@ function renderTrends() {
   charts.trendPct = new Chart(document.getElementById('chart-trend-pct').getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [
-      { label: 'Within 30 min %', data: pctSeries, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)', tension: 0.25, fill: true, pointRadius: 2, pointBackgroundColor: '#0891B2' },
+      { label: 'Within 30 min %', data: pctSeries, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.12)', tension: 0.25, fill: true, pointRadius: 2 },
       { label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false },
     ]},
-    options: {
-      maintainAspectRatio: false, responsive: true,
+    options: { maintainAspectRatio: false, responsive: true,
       plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
       scales: {
         x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
         y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-      },
-    },
+      }},
   });
 
   charts.trendWait = new Chart(document.getElementById('chart-trend-wait').getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [
-      { label: 'Average', data: avgSeries, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)', tension: 0.25, fill: false, pointRadius: 2 },
-      { label: 'Median', data: medSeries, borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.08)', tension: 0.25, fill: false, pointRadius: 2 },
+      { label: 'Average', data: avgSeries, borderColor: '#0891B2', tension: 0.25, fill: false, pointRadius: 2 },
+      { label: 'Median',  data: medSeries, borderColor: '#7C3AED', tension: 0.25, fill: false, pointRadius: 2 },
       { label: '30-min target', data: labels.map(() => 30), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false },
     ]},
-    options: {
-      maintainAspectRatio: false, responsive: true,
+    options: { maintainAspectRatio: false, responsive: true,
       plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
       scales: {
         x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-        y: { ticks: { color: theme.muted, callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-      },
-    },
+        y: { min: 0, ticks: { color: theme.muted, callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      }},
   });
 }
 
-/* ─────────────────────────── Tab 2: intraday + service table ─────────────────────────── */
+/* ─── Tab 1: token summary table ─── */
+function renderTokenSummary() {
+  const tbody = document.querySelector('#token-summary-table tbody');
+  const label = document.getElementById('token-sum-date-label');
+  if (!tokenSummaryData.length) {
+    if (label) label.textContent = '— data not yet available';
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No token summary data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
+    return;
+  }
+  const latest = tokenSummaryData[tokenSummaryData.length - 1].date;
+  const rows   = tokenSummaryData.filter(r => r.date === latest);
+  if (label) label.textContent = latest;
+  tbody.innerHTML = rows.map(r => {
+    const wp = r.pct_wait >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_wait.toFixed(1)}%</span>` : `<span class="kpi-pill pill-red">${r.pct_wait.toFixed(1)}%</span>`;
+    const sp = r.pct_serve >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_serve.toFixed(1)}%</span>` : `<span class="kpi-pill pill-blue">${r.pct_serve.toFixed(1)}%</span>`;
+    return `<tr>
+      <td class="svc-label">${r.token}</td>
+      <td class="num">${r.tickets}</td>
+      <td class="num">${r.total_tx}</td>
+      <td class="num">${r.renegade}</td>
+      <td class="num">${r.wait_min}</td>
+      <td class="num">${r.wait_avg}</td>
+      <td class="num">${r.wait_max}</td>
+      <td class="num">${r.serve_avg}</td>
+      <td class="num">${wp}</td>
+      <td class="num">${sp}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ─── Tab 1: wait distribution table ─── */
+function renderWaitDist() {
+  const tbody = document.querySelector('#wait-dist-table tbody');
+  const label = document.getElementById('wait-dist-date-label');
+  if (!waitDistData.length) {
+    if (label) label.textContent = '— data not yet available';
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No waiting time distribution data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
+    return;
+  }
+  const latest = waitDistData[waitDistData.length - 1];
+  if (label) label.textContent = latest.date;
+  const cols = [
+    [latest.lt10, latest.lt10p],
+    [latest.m10_20, latest.m10_20p],
+    [latest.m20_30, latest.m20_30p],
+    [latest.m30_40, latest.m30_40p],
+    [latest.m40_50, latest.m40_50p],
+    [latest.m50_60, latest.m50_60p],
+    [latest.gt60, latest.gt60p],
+    [latest.total, 100],
+  ];
+  // Bucket color: ≤30 min = green, 31–60 min = warn, >60 min = danger, total = blue
+  const bucketCls = ['pill-green','pill-green','pill-green','pill-warn','pill-warn','pill-warn','pill-red','pill-blue'];
+  const countRow = `<tr><td class="svc-label">Count</td>${cols.map(([n]) => `<td class="num">${n}</td>`).join('')}</tr>`;
+  const pctRow   = `<tr><td class="svc-label">%</td>${cols.map(([,p], i) =>
+    `<td class="num"><span class="kpi-pill ${bucketCls[i]}">${p.toFixed(1)}%</span></td>`
+  ).join('')}</tr>`;
+  tbody.innerHTML = countRow + pctRow;
+}
+
+/* ─── Tab 2: intraday chart + service table ─── */
 function initDailyDatePicker() {
   const picker = document.getElementById('daily-date');
   if (!intradayData.length) return;
   const dates  = [...new Set(intradayData.map(r => r.date))].sort();
   const latest = dates[dates.length - 1];
-  picker.min = dates[0];
-  picker.max = latest;
+  picker.min = dates[0]; picker.max = latest;
   picker.value = state.dailyDate || latest;
   state.dailyDate = picker.value;
   picker.onchange = () => { state.dailyDate = picker.value; renderDaily(); };
@@ -656,25 +871,39 @@ function renderDaily() {
   const date  = state.dailyDate;
   const rows  = intradayData.filter(r => r.date === date);
   const theme = chartTheme();
-
-  const byBucket = Object.fromEntries(rows.map(r => [r.time_bucket, r]));
-  const waitData = INTRADAY_BUCKETS.map(b => byBucket[b] ? byBucket[b].avg_wait_served_min : null);
-  const peakData = INTRADAY_BUCKETS.map(b => byBucket[b] ? byBucket[b].live_patients_peak  : null);
+  const byBucket  = Object.fromEntries(rows.map(r => [r.time_bucket, r]));
+  const waitData  = INTRADAY_BUCKETS.map(b => byBucket[b] != null ? byBucket[b].avg_wait_served_min : null);
+  const peakData  = INTRADAY_BUCKETS.map(b => byBucket[b] != null ? byBucket[b].live_patients_peak  : null);
 
   const dayDaily = dailyData.find(d => d.date === date);
   const peak = rows.reduce((p, r) => r.live_patients_peak > p.v ? { v: r.live_patients_peak, t: r.time_bucket } : p, { v: 0, t: '—' });
   const stats = document.getElementById('daily-quick');
   if (dayDaily) {
+    const pctCls = dayDaily.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red';
     stats.innerHTML = `
-      <span class="fl">Total Rx</span><span style="font-family:var(--fm);font-weight:600">${dayDaily.total_rx}</span>
-      <div class="fsep"></div>
-      <span class="fl">Within 30 min</span>
-      <span class="kpi-pill ${dayDaily.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red'}">${dayDaily.within_30min_pct.toFixed(1)}%</span>
-      <div class="fsep"></div>
-      <span class="fl">Peak queue</span><span style="font-family:var(--fm);font-weight:600">${peak.v} @ ${peak.t}</span>
-    `;
+      <div class="quick-stats">
+        <div class="qs-item">
+          <span class="qs-label">Total Rx</span>
+          <span class="qs-value">${dayDaily.total_rx.toLocaleString()}</span>
+        </div>
+        <div class="fsep" style="height:36px;"></div>
+        <div class="qs-item">
+          <span class="qs-label">Within 30 min</span>
+          <span class="kpi-pill ${pctCls}" style="margin-top:2px">${dayDaily.within_30min_pct.toFixed(1)}%</span>
+        </div>
+        <div class="fsep" style="height:36px;"></div>
+        <div class="qs-item">
+          <span class="qs-label">Peak queue</span>
+          <span class="qs-value">${peak.v}<small>pts @ ${peak.t}</small></span>
+        </div>
+        <div class="fsep" style="height:36px;"></div>
+        <div class="qs-item">
+          <span class="qs-label">Staff</span>
+          <span class="qs-value">${dayDaily.n_PF + dayDaily.n_PRP + dayDaily.n_PPF || '—'}<small>${dayDaily.n_PF ? ` PF${dayDaily.n_PF}` : ''}${dayDaily.n_PRP ? ` PRP${dayDaily.n_PRP}` : ''}${dayDaily.n_PPF ? ` PPF${dayDaily.n_PPF}` : ''}</small></span>
+        </div>
+      </div>`;
   } else {
-    stats.innerHTML = `<span class="fl" style="color:var(--muted)">No daily summary for ${date}</span>`;
+    stats.innerHTML = `<span style="color:var(--muted)">No daily summary for ${date}</span>`;
   }
 
   destroyChart('intraday');
@@ -683,18 +912,8 @@ function renderDaily() {
     data: {
       labels: INTRADAY_BUCKETS,
       datasets: [
-        {
-          label: 'Avg wait (min)', data: waitData,
-          borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)',
-          tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, pointBackgroundColor: '#0891B2',
-          spanGaps: false,
-        },
-        {
-          label: 'Live patients (peak)', data: peakData,
-          borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)',
-          tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, pointBackgroundColor: '#D97706',
-          spanGaps: false,
-        },
+        { label: 'Avg wait (min)', data: waitData, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)', tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, spanGaps: false },
+        { label: 'Live patients (peak)', data: peakData, borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)', tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, spanGaps: false },
       ],
     },
     options: {
@@ -703,8 +922,8 @@ function renderDaily() {
       plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
       scales: {
         x:  { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Time of day', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
-        y:  { type: 'linear', position: 'left',  ticks: { color: '#0891B2', callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Avg wait (min)', color: '#0891B2', font: { family: 'Figtree', weight: '600' } } },
-        y1: { type: 'linear', position: 'right', ticks: { color: '#D97706', font: { family: 'Noto Sans Mono' } }, grid: { display: false }, title: { display: true, text: 'Live patients', color: '#D97706', font: { family: 'Figtree', weight: '600' } } },
+        y:  { type: 'linear', position: 'left',  min: 0, ticks: { color: '#0891B2', callback: v => v+'m', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Avg wait (min)', color: '#0891B2', font: { family: 'Figtree', weight: '600' } } },
+        y1: { type: 'linear', position: 'right', min: 0, ticks: { color: '#D97706', font: { family: 'Noto Sans Mono' } }, grid: { display: false }, title: { display: true, text: 'Live patients', color: '#D97706', font: { family: 'Figtree', weight: '600' } } },
       },
     },
   });
@@ -713,78 +932,61 @@ function renderDaily() {
 }
 
 function renderDailyServiceTable(date) {
-  const label = document.getElementById('daily-svc-date-label');
-  if (label) label.textContent = date;
+  const lbl  = document.getElementById('daily-svc-date-label');
+  if (lbl) lbl.textContent = date;
   const tbody = document.querySelector('#service-latest-table tbody');
   const rows  = serviceData.filter(r => r.date === date);
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ${date}</td></tr>`;
-    return;
-  }
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ${date}</td></tr>`; return; }
   tbody.innerHTML = SVC_KEYS.map(svc => {
     const r = rows.find(x => x.service === svc);
     if (!r) return '';
-    const okPill = r.within_30min_pct >= TARGET_PCT
-      ? `<span class="kpi-pill pill-green">▲ ${r.within_30min_pct.toFixed(1)}%</span>`
-      : `<span class="kpi-pill pill-red">${r.within_30min_pct.toFixed(1)}%</span>`;
     return `<tr>
       <td class="svc-label">${SVC_LABELS[svc]}</td>
       <td class="num">${r.total_rx}</td>
-      <td class="num">${okPill}</td>
+      <td class="num">${pill(r.within_30min_pct)}</td>
       <td class="num">${r.avg_wait_min.toFixed(1)}</td>
       <td class="num">${r.median_wait_min.toFixed(1)}</td>
     </tr>`;
   }).join('');
 }
 
-/* ─────────────────────────── Tab 3: service chart + scatter plots ─────────────────────────── */
+/* ─── Tab 3: service chart + scatter plots ─── */
 function renderServices() {
   const rows  = serviceInRange().filter(r => state.services.has(r.service));
   const theme = chartTheme();
   destroyChart('svc');
 
-  const dates    = [...new Set(rows.map(r => r.date))].sort();
-  const labels   = dates.map(d => d.slice(5));
-  const datasets = SVC_KEYS.filter(k => state.services.has(k)).map(svc => {
-    const data = dates.map(d => {
-      const r = rows.find(x => x.date === d && x.service === svc);
-      return r ? r.within_30min_pct : null;
-    });
-    return {
-      label: SVC_LABELS[svc], data, borderColor: SVC_COLORS[svc],
-      backgroundColor: SVC_COLORS[svc] + '20', tension: 0.25, fill: false, pointRadius: 2,
-    };
-  });
+  const dates  = [...new Set(rows.map(r => r.date))].sort();
+  const labels = dates.map(d => d.slice(5));
+  const datasets = SVC_KEYS.filter(k => state.services.has(k)).map(svc => ({
+    label: SVC_LABELS[svc],
+    data: dates.map(d => { const r = rows.find(x => x.date===d && x.service===svc); return r ? r.within_30min_pct : null; }),
+    borderColor: SVC_COLORS[svc], backgroundColor: SVC_COLORS[svc]+'20', tension: 0.25, fill: false, pointRadius: 2,
+  }));
   datasets.push({ label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT), borderColor: '#059669', borderDash: [6,4], pointRadius: 0, fill: false });
 
   charts.svc = new Chart(document.getElementById('chart-svc').getContext('2d'), {
-    type: 'line',
-    data: { labels, datasets },
-    options: {
-      maintainAspectRatio: false, responsive: true,
+    type: 'line', data: { labels, datasets },
+    options: { maintainAspectRatio: false, responsive: true,
       plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
       scales: {
         x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-      },
-    },
+        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v+'%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      }},
   });
 
   const tbody = document.querySelector('#service-range-table tbody');
   tbody.innerHTML = SVC_KEYS.map(svc => {
     const sub = rows.filter(r => r.service === svc);
     if (!sub.length) return '';
-    const totRx  = sub.reduce((a,r) => a + r.total_rx, 0);
-    const avgPct = sub.reduce((a,r) => a + r.within_30min_pct, 0) / sub.length;
-    const avgWt  = sub.reduce((a,r) => a + r.avg_wait_min, 0)     / sub.length;
-    const medWt  = sub.reduce((a,r) => a + r.median_wait_min, 0)  / sub.length;
-    const okPill = avgPct >= TARGET_PCT
-      ? `<span class="kpi-pill pill-green">${avgPct.toFixed(1)}%</span>`
-      : `<span class="kpi-pill pill-red">${avgPct.toFixed(1)}%</span>`;
+    const totRx  = sub.reduce((a,r) => a+r.total_rx, 0);
+    const avgPct = sub.reduce((a,r) => a+r.within_30min_pct, 0) / sub.length;
+    const avgWt  = sub.reduce((a,r) => a+r.avg_wait_min, 0)     / sub.length;
+    const medWt  = sub.reduce((a,r) => a+r.median_wait_min, 0)  / sub.length;
     return `<tr>
       <td class="svc-label">${SVC_LABELS[svc]}</td>
       <td class="num">${totRx}</td>
-      <td class="num">${okPill}</td>
+      <td class="num">${pill(avgPct)}</td>
       <td class="num">${avgWt.toFixed(1)}</td>
       <td class="num">${medWt.toFixed(1)}</td>
     </tr>`;
@@ -795,84 +997,62 @@ function renderServices() {
 
 function renderScatterPlots(theme) {
   theme = theme || chartTheme();
-  destroyChart('scatterVol');
-  destroyChart('scatterStaff');
+  destroyChart('scatterVol'); destroyChart('scatterStaff');
 
-  const volPts   = dailyData.filter(r => r.total_rx > 0 && r.avg_wait_min > 0)
-    .map(r => ({ x: r.total_rx, y: r.avg_wait_min, date: r.date }));
-  const staffPts = dailyData.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0 && r.avg_wait_min > 0)
-    .map(r => ({ x: r.n_PF + r.n_PRP + r.n_PPF, y: r.avg_wait_min, date: r.date }));
+  /* Volume scatter: total_rx vs within_30min_pct */
+  const volPts = dailyData.filter(r => r.total_rx > 0)
+    .map(r => ({ x: r.total_rx, y: r.within_30min_pct, date: r.date }));
+
+  /* Staff scatter: selected staff types vs within_30min_pct */
+  const staffPts = dailyData
+    .filter(r => staffTotal(r) > 0)
+    .map(r => ({ x: staffTotal(r), y: r.within_30min_pct, date: r.date }));
 
   function buildDatasets(pts, color) {
     const reg = linReg(pts);
-    const datasets = [{
-      label: 'Day',
-      data: pts,
-      backgroundColor: color + '99',
-      pointRadius: 5,
-      pointHoverRadius: 7,
-    }];
+    const ds = [{ label: 'Day', data: pts, backgroundColor: color + 'AA', pointRadius: 5, pointHoverRadius: 7 }];
     if (reg) {
-      const xs = pts.map(p => p.x);
-      const xMin = Math.min(...xs), xMax = Math.max(...xs);
-      datasets.push({
-        label: 'Trend',
-        type: 'line',
-        data: [{ x: xMin, y: reg.slope * xMin + reg.intercept }, { x: xMax, y: reg.slope * xMax + reg.intercept }],
-        borderColor: color,
-        borderDash: [5, 3],
-        pointRadius: 0,
-        fill: false,
-      });
+      const xs = pts.map(p => p.x), xMin = Math.min(...xs), xMax = Math.max(...xs);
+      ds.push({ label: 'Trend', type: 'line',
+        data: [{ x: xMin, y: reg.slope*xMin+reg.intercept }, { x: xMax, y: reg.slope*xMax+reg.intercept }],
+        borderColor: color, borderDash: [5,3], pointRadius: 0, fill: false });
     }
-    return datasets;
+    return ds;
   }
 
-  const scatterOpts = (xLabel) => ({
-    maintainAspectRatio: false, responsive: true,
-    plugins: {
-      legend: { display: false },
-      datalabels: { display: false },
-      tooltip: {
-        callbacks: {
-          label: ctx => {
-            if (ctx.datasetIndex === 0) {
-              const p = ctx.raw;
-              return `${p.date}: ${p.x} ${xLabel === 'Total Rx' ? 'Rx' : 'staff'}, ${p.y.toFixed(1)} min`;
-            }
-            return null;
-          }
-        }
-      }
-    },
-    scales: {
-      x: { title: { display: true, text: xLabel, color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-      y: { title: { display: true, text: 'Avg wait (min)', color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
-    },
-  });
+  function scatterOpts(xLabel) {
+    return {
+      maintainAspectRatio: false, responsive: true,
+      plugins: {
+        legend: { display: false }, datalabels: { display: false },
+        tooltip: { callbacks: { label: ctx => ctx.datasetIndex === 0 ? `${ctx.raw.date}: ${ctx.raw.x} | ${ctx.raw.y.toFixed(1)}%` : null } },
+      },
+      scales: {
+        x: { title: { display: true, text: xLabel, color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { min: 0, max: 100, title: { display: true, text: '% within 30 min', color: theme.muted, font: { family: 'Figtree', weight: '600' } }, ticks: { color: theme.muted, callback: v => v+'%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+      },
+    };
+  }
 
   charts.scatterVol = new Chart(document.getElementById('chart-scatter-vol').getContext('2d'), {
-    type: 'scatter',
-    data: { datasets: buildDatasets(volPts, '#0891B2') },
-    options: scatterOpts('Total Rx'),
+    type: 'scatter', data: { datasets: buildDatasets(volPts, '#0891B2') }, options: scatterOpts('Total Rx'),
   });
-
   charts.scatterStaff = new Chart(document.getElementById('chart-scatter-staff').getContext('2d'), {
-    type: 'scatter',
-    data: { datasets: buildDatasets(staffPts, '#7C3AED') },
-    options: scatterOpts('Total Staff'),
+    type: 'scatter', data: { datasets: buildDatasets(staffPts, '#7C3AED') }, options: scatterOpts('Total Staff on Duty'),
   });
 }
 
-/* ─────────────────────────── Render orchestrator ─────────────────────────── */
+/* ─── Render orchestrator ─── */
 function renderAll() {
   renderKPIs();
   renderTrends();
+  renderTokenSummary();
+  renderWaitDist();
   if (state.dailyDate) renderDaily();
   renderServices();
 }
 
-/* ─────────────────────────── Wiring ─────────────────────────── */
+/* ─── Wiring ─── */
 document.querySelectorAll('.tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t === tab));
@@ -890,6 +1070,15 @@ document.querySelectorAll('.svc-btn').forEach(btn => {
   });
 });
 
+document.querySelectorAll('.staff-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    btn.classList.toggle('active');
+    const s = btn.dataset.staff;
+    if (state.staffTypes.has(s)) state.staffTypes.delete(s); else state.staffTypes.add(s);
+    renderScatterPlots();
+  });
+});
+
 document.getElementById('refresh-btn').addEventListener('click', loadData);
 
 document.getElementById('dark-toggle').addEventListener('click', () => {
@@ -898,7 +1087,6 @@ document.getElementById('dark-toggle').addEventListener('click', () => {
   renderAll();
 });
 
-/* Embed mode for Google Sites */
 if (location.hash === '#embed' || location.search.includes('embed=1')) {
   document.body.classList.add('embed-mode');
 }
