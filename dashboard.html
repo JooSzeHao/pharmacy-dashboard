@@ -492,6 +492,11 @@ function normalizeBucket(v) {
     return `${String(Math.floor(totalMin / 60)).padStart(2,'0')}:${String(totalMin % 60).padStart(2,'0')}`;
   }
   const s = String(v).trim();
+  // gviz datetime string: "Date(1899,11,30,7,30,0)"
+  const dm = s.match(/^Date\(\d+,\d+,\d+,(\d+),(\d+)/);
+  if (dm) {
+    return `${String(dm[1]).padStart(2,'0')}:${String(dm[2]).padStart(2,'0')}`;
+  }
   const m = s.match(/^(\d+):(\d+)(?::\d+)?\s*(AM|PM)?$/i);
   if (!m) return s;
   let h = parseInt(m[1], 10);
