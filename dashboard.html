@@ -474,9 +474,19 @@ function parseDate(v) {
   return s;
 }
 
-/* Normalize time_bucket: handles "7:30", "07:30", "7:30 AM", numeric fraction (0.3125) */
+/* Normalize time_bucket — handles all formats gviz may return:
+   - JS Date object  : new Date(1899,11,30,7,30,0)  → "07:30"
+   - TimeOfDay array : [7,30,0,0]                   → "07:30"
+   - Fractional day  : 0.3125                        → "07:30"
+   - String variants : "7:30", "07:30", "7:30 AM"   → "07:30"  */
 function normalizeBucket(v) {
   if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date) {
+    return `${String(v.getHours()).padStart(2,'0')}:${String(v.getMinutes()).padStart(2,'0')}`;
+  }
+  if (Array.isArray(v)) {
+    return `${String(v[0]).padStart(2,'0')}:${String(v[1]).padStart(2,'0')}`;
+  }
   if (typeof v === 'number') {
     const totalMin = Math.round(v * 24 * 60);
     return `${String(Math.floor(totalMin / 60)).padStart(2,'0')}:${String(totalMin % 60).padStart(2,'0')}`;
