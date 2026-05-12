@@ -271,8 +271,6 @@
             <thead><tr>
               <th class="svc-label">Token</th>
               <th class="num">Tickets</th>
-              <th class="num">Transactions</th>
-              <th class="num">Renegade</th>
               <th class="num">Wait Min</th>
               <th class="num">Wait Avg</th>
               <th class="num">Wait Max</th>
@@ -816,7 +814,7 @@ function renderTokenSummary() {
   const label = document.getElementById('token-sum-date-label');
   if (!tokenSummaryData.length) {
     if (label) label.textContent = '— data not yet available';
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No token summary data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No token summary data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
     return;
   }
   const latest = tokenSummaryData[tokenSummaryData.length - 1].date;
@@ -828,8 +826,6 @@ function renderTokenSummary() {
     return `<tr>
       <td class="svc-label">${r.token}</td>
       <td class="num">${r.tickets}</td>
-      <td class="num">${r.total_tx}</td>
-      <td class="num">${r.renegade}</td>
       <td class="num">${r.wait_min}</td>
       <td class="num">${r.wait_avg}</td>
       <td class="num">${r.wait_max}</td>
