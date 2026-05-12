@@ -112,7 +112,7 @@
   .panel.active { display: block; }
 
   /* KPI grid */
-  .kpi-grid { display: grid; grid-template-columns: repeat(5,1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 14px; margin-bottom: 20px; }
   .kpi-card {
     background: var(--surface); border-radius: var(--radius); padding: 18px 20px;
     box-shadow: var(--shadow-sm); border-left: 4px solid var(--primary); position: relative;
@@ -189,7 +189,7 @@
   /* Range info badge */
   .range-info { font-family: var(--fh); font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 10px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
 
-  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
+  @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
   @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } .page { padding: 16px; } .header, .filter-bar, .tab-bar { padding-left: 16px; padding-right: 16px; } }
 </style>
 </head>
@@ -264,6 +264,35 @@
 
     <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
+        <h3>Bilangan Item trend <span class="sub">items dispensed · selected range</span>
+          <button class="export-btn" onclick="exportChart('trendItem','bil-item-trend')">⬇ PNG</button></h3>
+        <div class="chart-wrap tall"><canvas id="chart-trend-item"></canvas></div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Tab 2: Daily Operations -->
+  <section class="panel" id="panel-daily">
+    <div class="row" style="grid-template-columns:1fr; align-items:end;">
+      <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
+        <div class="fg">
+          <span class="fl">Day</span>
+          <input type="date" id="daily-date">
+        </div>
+        <div class="fsep"></div>
+        <div class="fg" id="daily-quick"></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3>Intraday wait time &amp; queue length <span class="sub">30-min buckets</span>
+          <button class="export-btn" onclick="exportChart('intraday','intraday-chart')">⬇ PNG</button></h3>
+        <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
         <h3>Token Summary <span class="sub" id="token-sum-date-label"></span>
           <button class="export-btn" onclick="exportTableCSV('token-summary-table','token-summary')">⬇ CSV</button></h3>
         <div class="tbl-scroll">
@@ -300,47 +329,11 @@
               <th class="num">50 – 60 min</th>
               <th class="num">&gt; 60 min</th>
               <th class="num">Total</th>
+              <th class="num">Avg Wait</th>
             </tr></thead>
             <tbody></tbody>
           </table>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Tab 2: Daily Operations -->
-  <section class="panel" id="panel-daily">
-    <div class="row" style="grid-template-columns:1fr; align-items:end;">
-      <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
-        <div class="fg">
-          <span class="fl">Day</span>
-          <input type="date" id="daily-date">
-        </div>
-        <div class="fsep"></div>
-        <div class="fg" id="daily-quick"></div>
-      </div>
-    </div>
-    <div class="row" style="grid-template-columns:1fr;">
-      <div class="card">
-        <h3>Intraday wait time &amp; queue length <span class="sub">30-min buckets</span>
-          <button class="export-btn" onclick="exportChart('intraday','intraday-chart')">⬇ PNG</button></h3>
-        <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
-      </div>
-    </div>
-    <div class="row" style="grid-template-columns:1fr;">
-      <div class="card">
-        <h3>Service-level performance <span class="sub" id="daily-svc-date-label"></span>
-          <button class="export-btn" onclick="exportTableCSV('service-latest-table','service-performance')">⬇ CSV</button></h3>
-        <table id="service-latest-table">
-          <thead><tr>
-            <th class="svc-label">Service</th>
-            <th class="num">Total Rx</th>
-            <th class="num">Within 30 min %</th>
-            <th class="num">Avg wait (min)</th>
-            <th class="num">Median wait (min)</th>
-          </tr></thead>
-          <tbody></tbody>
-        </table>
       </div>
     </div>
   </section>
@@ -387,7 +380,7 @@
         <button class="toggle-btn staff-btn active" data-staff="PPF">PPF / Trainee</button>
       </div>
     </div>
-    <div class="row" style="grid-template-columns:1fr 1fr;">
+    <div class="row" style="grid-template-columns:repeat(auto-fit,minmax(360px,1fr));">
       <div class="card">
         <h3>Daily Volume vs % Within 30 min <span class="sub">all time · each dot = 1 day</span>
           <button class="export-btn" onclick="exportChart('scatterVol','volume-vs-pct')">⬇ PNG</button></h3>
@@ -397,6 +390,11 @@
         <h3>Daily Staffing vs % Within 30 min <span class="sub">days with staff data</span>
           <button class="export-btn" onclick="exportChart('scatterStaff','staff-vs-pct')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-scatter-staff"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Daily Bil Item vs % Within 30 min <span class="sub">days with item data</span>
+          <button class="export-btn" onclick="exportChart('scatterItem','item-vs-pct')">⬇ PNG</button></h3>
+        <div class="chart-wrap tall"><canvas id="chart-scatter-item"></canvas></div>
       </div>
     </div>
   </section>
@@ -524,6 +522,7 @@ async function loadData() {
       total_rx: num(r.total_rx), within_30min_pct: num(r.within_30min_pct),
       avg_wait_min: num(r.avg_wait_min), median_wait_min: num(r.median_wait_min),
       n_PF: num(r.n_PF), n_PRP: num(r.n_PRP), n_PPF: num(r.n_PPF),
+      n_item: num(r.n_item),
     })).filter(r => r.date).sort((a,b) => a.date.localeCompare(b.date));
 
     serviceData = s.map(r => ({
@@ -542,9 +541,9 @@ async function loadData() {
 
     tokenSummaryData = tok.map(r => ({
       date: parseDate(r.date), token: str(r.token),
-      tickets: num(r.tickets), total_tx: num(r.total_tx), renegade: num(r.renegade),
-      wait_min: str(r.wait_min), wait_avg: str(r.wait_avg), wait_max: str(r.wait_max),
-      serve_avg: str(r.serve_avg),
+      tickets: num(r.tickets),
+      wait_min: num(r.wait_min), wait_avg: num(r.wait_avg), wait_max: num(r.wait_max),
+      serve_avg: num(r.serve_avg),
       pct_wait: num(r.pct_wait), pct_serve: num(r.pct_serve),
     })).filter(r => r.date && r.token);
 
@@ -593,7 +592,10 @@ function monthlyStats() {
   const medWait   = month.reduce((s, r) => s + r.median_wait_min, 0) / daysCount;
   const staffRows = month.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0);
   const avgStaff  = staffRows.length ? staffRows.reduce((s,r) => s + r.n_PF + r.n_PRP + r.n_PPF, 0) / staffRows.length : null;
-  return { totalRx, avgPct, avgWait, medWait, avgStaff, daysCount, ym };
+  const itemRows  = month.filter(r => r.n_item > 0);
+  const totalItem = itemRows.reduce((s, r) => s + r.n_item, 0);
+  const avgItem   = itemRows.length ? totalItem / itemRows.length : null;
+  return { totalRx, avgPct, avgWait, medWait, avgStaff, totalItem, avgItem, itemDays: itemRows.length, daysCount, ym };
 }
 
 function staffTotal(r) {
@@ -756,6 +758,17 @@ function renderKPIs() {
       pill: '',
       mo: mo && mo.avgStaff !== null ? moSection([['Avg total', mo.avgStaff.toFixed(1), 'staff']]) : '',
     },
+    {
+      cls: '',
+      label: 'Bil Item',
+      value: latest.n_item ? latest.n_item.toLocaleString() : '—', unit: '',
+      sub: latest.n_item ? `Latest: ${latest.date}` : 'Not yet entered',
+      pill: '',
+      mo: mo && mo.avgItem !== null ? moSection([
+        ['Avg/day',     Math.round(mo.avgItem).toLocaleString(), 'items'],
+        ['Month total', mo.totalItem.toLocaleString(),           'items'],
+      ]) : '',
+    },
   ];
 
   grid.innerHTML = cards.map(c => `
@@ -772,11 +785,12 @@ function renderKPIs() {
 function renderTrends() {
   const rows  = dailyInRange();
   const theme = chartTheme();
-  destroyChart('trendPct'); destroyChart('trendWait');
-  const labels    = rows.map(r => r.date.slice(5));
-  const pctSeries = rows.map(r => r.within_30min_pct);
-  const avgSeries = rows.map(r => r.avg_wait_min);
-  const medSeries = rows.map(r => r.median_wait_min);
+  destroyChart('trendPct'); destroyChart('trendWait'); destroyChart('trendItem');
+  const labels     = rows.map(r => r.date.slice(5));
+  const pctSeries  = rows.map(r => r.within_30min_pct);
+  const avgSeries  = rows.map(r => r.avg_wait_min);
+  const medSeries  = rows.map(r => r.median_wait_min);
+  const itemSeries = rows.map(r => r.n_item > 0 ? r.n_item : null);
 
   charts.trendPct = new Chart(document.getElementById('chart-trend-pct').getContext('2d'), {
     type: 'line',
@@ -806,9 +820,22 @@ function renderTrends() {
         y: { min: 0, ticks: { color: theme.muted, callback: v => v + 'm', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
       }},
   });
+
+  charts.trendItem = new Chart(document.getElementById('chart-trend-item').getContext('2d'), {
+    type: 'line',
+    data: { labels, datasets: [
+      { label: 'Bil Item', data: itemSeries, borderColor: '#7C3AED', backgroundColor: 'rgba(124,58,237,0.12)', tension: 0.25, fill: true, pointRadius: 3, spanGaps: false },
+    ]},
+    options: { maintainAspectRatio: false, responsive: true,
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid } },
+        y: { min: 0, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Items dispensed', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
+      }},
+  });
 }
 
-/* ─── Tab 1: token summary table ─── */
+/* ─── Tab 2: token summary table ─── */
 function renderTokenSummary() {
   const tbody = document.querySelector('#token-summary-table tbody');
   const label = document.getElementById('token-sum-date-label');
@@ -820,49 +847,86 @@ function renderTokenSummary() {
   const latest = tokenSummaryData[tokenSummaryData.length - 1].date;
   const rows   = tokenSummaryData.filter(r => r.date === latest);
   if (label) label.textContent = latest;
-  tbody.innerHTML = rows.map(r => {
-    const wp = r.pct_wait >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_wait.toFixed(1)}%</span>` : `<span class="kpi-pill pill-red">${r.pct_wait.toFixed(1)}%</span>`;
+
+  const rowsHtml = rows.map(r => {
+    const wp = r.pct_wait  >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_wait.toFixed(1)}%</span>`  : `<span class="kpi-pill pill-red">${r.pct_wait.toFixed(1)}%</span>`;
     const sp = r.pct_serve >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_serve.toFixed(1)}%</span>` : `<span class="kpi-pill pill-blue">${r.pct_serve.toFixed(1)}%</span>`;
     return `<tr>
       <td class="svc-label">${r.token}</td>
       <td class="num">${r.tickets}</td>
-      <td class="num">${r.wait_min}</td>
-      <td class="num">${r.wait_avg}</td>
-      <td class="num">${r.wait_max}</td>
-      <td class="num">${r.serve_avg}</td>
+      <td class="num">${r.wait_min.toFixed(1)}</td>
+      <td class="num">${r.wait_avg.toFixed(1)}</td>
+      <td class="num">${r.wait_max.toFixed(1)}</td>
+      <td class="num">${r.serve_avg.toFixed(1)}</td>
       <td class="num">${wp}</td>
       <td class="num">${sp}</td>
     </tr>`;
   }).join('');
+
+  // Total row (weighted averages by tickets)
+  const totalTickets = rows.reduce((s, r) => s + r.tickets, 0);
+  let totalHtml = '';
+  if (totalTickets > 0) {
+    const wMin   = Math.min(...rows.map(r => r.wait_min));
+    const wAvg   = rows.reduce((s, r) => s + r.wait_avg   * r.tickets, 0) / totalTickets;
+    const wMax   = Math.max(...rows.map(r => r.wait_max));
+    const sAvg   = rows.reduce((s, r) => s + r.serve_avg  * r.tickets, 0) / totalTickets;
+    const pWait  = rows.reduce((s, r) => s + r.pct_wait   * r.tickets, 0) / totalTickets;
+    const pServe = rows.reduce((s, r) => s + r.pct_serve  * r.tickets, 0) / totalTickets;
+    const twp = pWait  >= TARGET_PCT ? `<span class="kpi-pill pill-green">${pWait.toFixed(1)}%</span>`  : `<span class="kpi-pill pill-red">${pWait.toFixed(1)}%</span>`;
+    const tsp = pServe >= TARGET_PCT ? `<span class="kpi-pill pill-green">${pServe.toFixed(1)}%</span>` : `<span class="kpi-pill pill-blue">${pServe.toFixed(1)}%</span>`;
+    totalHtml = `<tr style="font-weight:700;border-top:2px solid var(--border);">
+      <td class="svc-label">Total / Overall</td>
+      <td class="num">${totalTickets}</td>
+      <td class="num">${wMin.toFixed(1)}</td>
+      <td class="num">${wAvg.toFixed(1)}</td>
+      <td class="num">${wMax.toFixed(1)}</td>
+      <td class="num">${sAvg.toFixed(1)}</td>
+      <td class="num">${twp}</td>
+      <td class="num">${tsp}</td>
+    </tr>`;
+  }
+
+  tbody.innerHTML = rowsHtml + totalHtml;
 }
 
-/* ─── Tab 1: wait distribution table ─── */
+/* ─── Tab 2: wait distribution table ─── */
 function renderWaitDist() {
   const tbody = document.querySelector('#wait-dist-table tbody');
   const label = document.getElementById('wait-dist-date-label');
   if (!waitDistData.length) {
     if (label) label.textContent = '— data not yet available';
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">No waiting time distribution data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No waiting time distribution data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
     return;
   }
   const latest = waitDistData[waitDistData.length - 1];
   if (label) label.textContent = latest.date;
   const cols = [
-    [latest.lt10, latest.lt10p],
+    [latest.lt10,   latest.lt10p],
     [latest.m10_20, latest.m10_20p],
     [latest.m20_30, latest.m20_30p],
     [latest.m30_40, latest.m30_40p],
     [latest.m40_50, latest.m40_50p],
     [latest.m50_60, latest.m50_60p],
-    [latest.gt60, latest.gt60p],
-    [latest.total, 100],
+    [latest.gt60,   latest.gt60p],
+    [latest.total,  100],
   ];
+  // Avg wait from daily summary for the same date
+  const dayRow  = dailyData.find(d => d.date === latest.date);
+  const avgWait = dayRow ? dayRow.avg_wait_min : null;
+
   // Bucket color: ≤30 min = green, 31–60 min = warn, >60 min = danger, total = blue
   const bucketCls = ['pill-green','pill-green','pill-green','pill-warn','pill-warn','pill-warn','pill-red','pill-blue'];
-  const countRow = `<tr><td class="svc-label">Count</td>${cols.map(([n]) => `<td class="num">${n}</td>`).join('')}</tr>`;
-  const pctRow   = `<tr><td class="svc-label">%</td>${cols.map(([,p], i) =>
-    `<td class="num"><span class="kpi-pill ${bucketCls[i]}">${p.toFixed(1)}%</span></td>`
-  ).join('')}</tr>`;
+  const countRow = `<tr>
+    <td class="svc-label">Count</td>
+    ${cols.map(([n]) => `<td class="num">${n}</td>`).join('')}
+    <td class="num">${avgWait !== null ? avgWait.toFixed(1) + ' min' : '—'}</td>
+  </tr>`;
+  const pctRow = `<tr>
+    <td class="svc-label">%</td>
+    ${cols.map(([,p], i) => `<td class="num"><span class="kpi-pill ${bucketCls[i]}">${p.toFixed(1)}%</span></td>`).join('')}
+    <td class="num" style="color:var(--muted)">—</td>
+  </tr>`;
   tbody.innerHTML = countRow + pctRow;
 }
 
@@ -912,6 +976,11 @@ function renderDaily() {
           <span class="qs-label">Staff</span>
           <span class="qs-value">${dayDaily.n_PF + dayDaily.n_PRP + dayDaily.n_PPF || '—'}<small>${dayDaily.n_PF ? ` PF${dayDaily.n_PF}` : ''}${dayDaily.n_PRP ? ` PRP${dayDaily.n_PRP}` : ''}${dayDaily.n_PPF ? ` PPF${dayDaily.n_PPF}` : ''}</small></span>
         </div>
+        <div class="fsep" style="height:36px;"></div>
+        <div class="qs-item">
+          <span class="qs-label">Bil Item</span>
+          <span class="qs-value">${dayDaily.n_item ? dayDaily.n_item.toLocaleString() : '—'}</span>
+        </div>
       </div>`;
   } else {
     stats.innerHTML = `<span style="color:var(--muted)">No daily summary for ${date}</span>`;
@@ -939,26 +1008,6 @@ function renderDaily() {
     },
   });
 
-  renderDailyServiceTable(date);
-}
-
-function renderDailyServiceTable(date) {
-  const lbl  = document.getElementById('daily-svc-date-label');
-  if (lbl) lbl.textContent = date;
-  const tbody = document.querySelector('#service-latest-table tbody');
-  const rows  = serviceData.filter(r => r.date === date);
-  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted)">No service data for ${date}</td></tr>`; return; }
-  tbody.innerHTML = SVC_KEYS.map(svc => {
-    const r = rows.find(x => x.service === svc);
-    if (!r) return '';
-    return `<tr>
-      <td class="svc-label">${SVC_LABELS[svc]}</td>
-      <td class="num">${r.total_rx}</td>
-      <td class="num">${pill(r.within_30min_pct)}</td>
-      <td class="num">${r.avg_wait_min.toFixed(1)}</td>
-      <td class="num">${r.median_wait_min.toFixed(1)}</td>
-    </tr>`;
-  }).join('');
 }
 
 /* ─── Tab 3: service chart + scatter plots ─── */
@@ -1008,7 +1057,7 @@ function renderServices() {
 
 function renderScatterPlots(theme) {
   theme = theme || chartTheme();
-  destroyChart('scatterVol'); destroyChart('scatterStaff');
+  destroyChart('scatterVol'); destroyChart('scatterStaff'); destroyChart('scatterItem');
 
   /* Volume scatter: total_rx vs within_30min_pct */
   const volPts = dailyData.filter(r => r.total_rx > 0)
@@ -1018,6 +1067,11 @@ function renderScatterPlots(theme) {
   const staffPts = dailyData
     .filter(r => staffTotal(r) > 0)
     .map(r => ({ x: staffTotal(r), y: r.within_30min_pct, date: r.date }));
+
+  /* Bil Item scatter: n_item vs within_30min_pct */
+  const itemPts = dailyData
+    .filter(r => r.n_item > 0)
+    .map(r => ({ x: r.n_item, y: r.within_30min_pct, date: r.date }));
 
   function buildDatasets(pts, color) {
     const reg = linReg(pts);
@@ -1050,6 +1104,9 @@ function renderScatterPlots(theme) {
   });
   charts.scatterStaff = new Chart(document.getElementById('chart-scatter-staff').getContext('2d'), {
     type: 'scatter', data: { datasets: buildDatasets(staffPts, '#7C3AED') }, options: scatterOpts('Total Staff on Duty'),
+  });
+  charts.scatterItem = new Chart(document.getElementById('chart-scatter-item').getContext('2d'), {
+    type: 'scatter', data: { datasets: buildDatasets(itemPts, '#059669') }, options: scatterOpts('Total Bil Item'),
   });
 }
 
