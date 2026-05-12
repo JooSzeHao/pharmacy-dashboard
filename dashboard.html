@@ -270,6 +270,32 @@
       </div>
     </div>
 
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3>Daily breakdown <span class="sub">selected range · one row per day</span>
+          <button class="export-btn" onclick="exportTableCSV('daily-breakdown-table','daily-breakdown')">⬇ CSV</button></h3>
+        <div class="tbl-scroll">
+          <table id="daily-breakdown-table">
+            <thead><tr>
+              <th class="svc-label">Date</th>
+              <th class="num">Total Rx</th>
+              <th class="num">Bil Item</th>
+              <th class="num">1–10 min</th>
+              <th class="num">11–20 min</th>
+              <th class="num">21–30 min</th>
+              <th class="num">31–40 min</th>
+              <th class="num">41–50 min</th>
+              <th class="num">51–60 min</th>
+              <th class="num">&gt; 60 min</th>
+              <th class="num">% &lt; 30 min</th>
+              <th class="num">Avg wait (min)</th>
+            </tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </section>
 
   <!-- Tab 2: Daily Operations -->
@@ -821,6 +847,8 @@ function renderTrends() {
       }},
   });
 
+  renderDailyBreakdown();
+
   charts.trendItem = new Chart(document.getElementById('chart-trend-item').getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [
@@ -833,6 +861,39 @@ function renderTrends() {
         y: { min: 0, ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Items dispensed', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
       }},
   });
+}
+
+/* ─── Tab 1: daily breakdown table (per-day, selected range) ─── */
+function renderDailyBreakdown() {
+  const tbody = document.querySelector('#daily-breakdown-table tbody');
+  if (!tbody) return;
+  const rows = dailyInRange();
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:18px">No daily data in selected range.</td></tr>`;
+    return;
+  }
+  const wdByDate = Object.fromEntries(waitDistData.map(w => [w.date, w]));
+  // Show newest first
+  const sorted = [...rows].sort((a, b) => b.date.localeCompare(a.date));
+  tbody.innerHTML = sorted.map(r => {
+    const w = wdByDate[r.date] || {};
+    const cell = v => (v === undefined || v === null || v === '') ? '—' : v;
+    const pctCls = r.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red';
+    return `<tr>
+      <td class="svc-label">${r.date}</td>
+      <td class="num">${r.total_rx ? r.total_rx.toLocaleString() : '—'}</td>
+      <td class="num">${r.n_item ? r.n_item.toLocaleString() : '—'}</td>
+      <td class="num">${cell(w.lt10)}</td>
+      <td class="num">${cell(w.m10_20)}</td>
+      <td class="num">${cell(w.m20_30)}</td>
+      <td class="num">${cell(w.m30_40)}</td>
+      <td class="num">${cell(w.m40_50)}</td>
+      <td class="num">${cell(w.m50_60)}</td>
+      <td class="num">${cell(w.gt60)}</td>
+      <td class="num"><span class="kpi-pill ${pctCls}">${r.within_30min_pct.toFixed(1)}%</span></td>
+      <td class="num">${r.avg_wait_min.toFixed(1)}</td>
+    </tr>`;
+  }).join('');
 }
 
 /* ─── Tab 2: token summary table ─── */
