@@ -437,6 +437,7 @@ const SHEET_TOKEN    = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/
 const SHEET_WD       = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=wait_dist`;
 
 const TARGET_PCT = 95;
+const TARGET_WAIT_MIN = 30;
 const SVC_LABELS = { KURANG3: 'Kurang 3 / OKU', LEBIH3: 'Lebih 3', BMSONLY: 'Ulangan' };
 const SVC_COLORS = { KURANG3: '#0891B2', LEBIH3: '#7C3AED', BMSONLY: '#D97706' };
 const SVC_KEYS   = ['KURANG3', 'LEBIH3', 'BMSONLY'];
@@ -1111,14 +1112,57 @@ function renderDaily() {
   renderTokenSummary();
   renderWaitDist();
 
+  // Lunch-window shading plugin: Mon 12:00-14:00, Fri 12:15-14:45
+  const lunchShade = {
+    id: 'lunchShade',
+    beforeDatasetsDraw(chart) {
+      if (!state.dailyDate) return;
+      const [yy, mm, dd] = state.dailyDate.split('-').map(Number);
+      const dow = new Date(yy, mm - 1, dd).getDay(); // 0=Sun … 6=Sat
+      let startMin, endMin, label;
+      if      (dow >= 1 && dow <= 4) { startMin = 12*60;     endMin = 14*60;     label = 'Lunch'; }
+      else if (dow === 5)            { startMin = 12*60+15;  endMin = 14*60+45;  label = 'Lunch (Fri)'; }
+      else return; // Sat/Sun: no shading
+
+      const labels = chart.data.labels;
+      if (!labels || labels.length < 2) return;
+      const parseT = s => { const [h,m] = s.split(':').map(Number); return h*60 + m; };
+      const firstMin = parseT(labels[0]);
+      const lastMin  = parseT(labels[labels.length - 1]);
+      const span     = lastMin - firstMin;
+      if (span <= 0) return;
+
+      const xScale = chart.scales.x;
+      const yScale = chart.scales.y;
+      const xFirst = xScale.getPixelForValue(labels[0]);
+      const xLast  = xScale.getPixelForValue(labels[labels.length - 1]);
+      const pxSpan = xLast - xFirst;
+
+      const xS = xFirst + Math.max(0, (startMin - firstMin) / span) * pxSpan;
+      const xE = xFirst + Math.min(1, (endMin   - firstMin) / span) * pxSpan;
+
+      const ctx = chart.ctx;
+      ctx.save();
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.16)';
+      ctx.fillRect(xS, yScale.top, xE - xS, yScale.bottom - yScale.top);
+      ctx.fillStyle = 'rgba(180, 83, 9, 0.75)';
+      ctx.font = 'bold 11px Figtree, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, (xS + xE) / 2, yScale.top + 14);
+      ctx.restore();
+    },
+  };
+
   destroyChart('intraday');
   charts.intraday = new Chart(document.getElementById('chart-intraday').getContext('2d'), {
     type: 'line',
+    plugins: [lunchShade],
     data: {
       labels: INTRADAY_BUCKETS,
       datasets: [
         { label: 'Avg wait (min)', data: waitData, borderColor: '#0891B2', backgroundColor: 'rgba(8,145,178,0.10)', tension: 0.25, yAxisID: 'y', fill: true, pointRadius: 3, spanGaps: false },
         { label: 'Live patients (peak)', data: peakData, borderColor: '#D97706', backgroundColor: 'rgba(217,119,6,0.10)', tension: 0.25, yAxisID: 'y1', fill: false, borderDash: [4,3], pointRadius: 3, spanGaps: false },
+        { label: `${TARGET_WAIT_MIN}-min target`, data: INTRADAY_BUCKETS.map(() => TARGET_WAIT_MIN), borderColor: '#DC2626', borderDash: [6,4], borderWidth: 1.5, pointRadius: 0, fill: false, yAxisID: 'y', tension: 0 },
       ],
     },
     options: {
