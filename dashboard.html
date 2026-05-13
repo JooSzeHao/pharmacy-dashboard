@@ -714,8 +714,8 @@ function applyPreset(n) {
 function initDateRange() {
   if (!dailyData.length) return;
   const latest = dailyData[dailyData.length - 1].date;
-  const from30 = new Date(latest); from30.setDate(from30.getDate() - 29);
-  const fromStr = from30.toISOString().slice(0, 10);
+  // Default to Month-to-Date: 1st of the latest date's month → latest
+  const fromStr = latest.slice(0, 8) + '01';  // YYYY-MM-01
   const fromEl  = document.getElementById('from-date');
   const toEl    = document.getElementById('to-date');
   fromEl.value  = state.fromDate || fromStr;
@@ -878,11 +878,12 @@ function renderDailyBreakdown() {
     return;
   }
   const wdByDate = Object.fromEntries(waitDistData.map(w => [w.date, w]));
-  // Show newest first
-  const sorted = [...rows].sort((a, b) => b.date.localeCompare(a.date));
-  tbody.innerHTML = sorted.map(r => {
+  // Chronological order (oldest first)
+  const sorted = [...rows].sort((a, b) => a.date.localeCompare(b.date));
+  const cell = v => (v === undefined || v === null || v === '') ? '—' : v;
+
+  const bodyHtml = sorted.map(r => {
     const w = wdByDate[r.date] || {};
-    const cell = v => (v === undefined || v === null || v === '') ? '—' : v;
     const pctCls = r.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red';
     return `<tr>
       <td class="svc-label">${r.date}</td>
@@ -899,6 +900,39 @@ function renderDailyBreakdown() {
       <td class="num">${r.avg_wait_min.toFixed(1)}</td>
     </tr>`;
   }).join('');
+
+  // Totals row — sum counts; weighted avg for % and avg wait (by total_rx)
+  const sum = key => sorted.reduce((s, r) => s + (r[key] || 0), 0);
+  const sumWD = key => sorted.reduce((s, r) => s + ((wdByDate[r.date] || {})[key] || 0), 0);
+  const totalRx   = sum('total_rx');
+  const totalItem = sum('n_item');
+  const sumLt10   = sumWD('lt10');
+  const sumM10_20 = sumWD('m10_20');
+  const sumM20_30 = sumWD('m20_30');
+  const sumM30_40 = sumWD('m30_40');
+  const sumM40_50 = sumWD('m40_50');
+  const sumM50_60 = sumWD('m50_60');
+  const sumGt60   = sumWD('gt60');
+  const wPct = totalRx ? sorted.reduce((s, r) => s + r.within_30min_pct * r.total_rx, 0) / totalRx : 0;
+  const wAvg = totalRx ? sorted.reduce((s, r) => s + r.avg_wait_min     * r.total_rx, 0) / totalRx : 0;
+  const totalPctCls = wPct >= TARGET_PCT ? 'pill-green' : 'pill-red';
+
+  const totalRow = `<tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg-2);">
+    <td class="svc-label">Total / Avg</td>
+    <td class="num">${totalRx.toLocaleString()}</td>
+    <td class="num">${totalItem ? totalItem.toLocaleString() : '—'}</td>
+    <td class="num">${sumLt10}</td>
+    <td class="num">${sumM10_20}</td>
+    <td class="num">${sumM20_30}</td>
+    <td class="num">${sumM30_40}</td>
+    <td class="num">${sumM40_50}</td>
+    <td class="num">${sumM50_60}</td>
+    <td class="num">${sumGt60}</td>
+    <td class="num"><span class="kpi-pill ${totalPctCls}">${wPct.toFixed(1)}%</span></td>
+    <td class="num">${wAvg.toFixed(1)}</td>
+  </tr>`;
+
+  tbody.innerHTML = bodyHtml + totalRow;
 }
 
 /* ─── Tab 2: token summary table ─── */
