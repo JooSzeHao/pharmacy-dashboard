@@ -551,6 +551,8 @@ async function loadData() {
       n_item: num(r.n_item),
     })).filter(r => r.date).sort((a,b) => a.date.localeCompare(b.date));
     dailyData = [...new Map(dailyData.map(r => [r.date, r])).values()];
+    // Drop days with no transactions (zero-Rx — e.g. closed days, failed extracts)
+    dailyData = dailyData.filter(r => r.total_rx > 0);
 
     serviceData = s.map(r => ({
       date: parseDate(r.date), service: str(r.service),
@@ -589,6 +591,15 @@ async function loadData() {
       total: num(r.total),
     })).filter(r => r.date);
     waitDistData = [...new Map(waitDistData.map(r => [r.date, r])).values()];
+    // Drop empty wait_dist rows (zero total)
+    waitDistData = waitDistData.filter(r => r.total > 0);
+
+    // Lock all per-date arrays to dates that have real activity (dailyData is already filtered)
+    const validDates = new Set(dailyData.map(r => r.date));
+    serviceData      = serviceData.filter(r => validDates.has(r.date));
+    intradayData     = intradayData.filter(r => validDates.has(r.date));
+    tokenSummaryData = tokenSummaryData.filter(r => validDates.has(r.date));
+    waitDistData     = waitDistData.filter(r => validDates.has(r.date));
 
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleString('en-MY', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
