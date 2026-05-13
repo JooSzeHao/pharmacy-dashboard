@@ -550,12 +550,14 @@ async function loadData() {
       n_PF: num(r.n_PF), n_PRP: num(r.n_PRP), n_PPF: num(r.n_PPF),
       n_item: num(r.n_item),
     })).filter(r => r.date).sort((a,b) => a.date.localeCompare(b.date));
+    dailyData = [...new Map(dailyData.map(r => [r.date, r])).values()];
 
     serviceData = s.map(r => ({
       date: parseDate(r.date), service: str(r.service),
       total_rx: num(r.total_rx), within_30min_pct: num(r.within_30min_pct),
       avg_wait_min: num(r.avg_wait_min), median_wait_min: num(r.median_wait_min),
     })).filter(r => r.date && r.service);
+    serviceData = [...new Map(serviceData.map(r => [r.date + '|' + r.service, r])).values()];
 
     function orNull(v) { const n = parseFloat(String(v).replace(/[,%\s]/g,'')); return isNaN(n) || v === '' ? null : n; }
     intradayData = i.map(r => ({
@@ -564,6 +566,7 @@ async function loadData() {
       avg_wait_served_min: orNull(r.avg_wait_served_min),
       live_patients_peak:  orNull(r.live_patients_peak),
     })).filter(r => r.date && r.time_bucket);
+    intradayData = [...new Map(intradayData.map(r => [r.date + '|' + r.time_bucket, r])).values()];
 
     tokenSummaryData = tok.map(r => ({
       date: parseDate(r.date), token: str(r.token),
@@ -572,6 +575,7 @@ async function loadData() {
       serve_avg: num(r.serve_avg),
       pct_wait: num(r.pct_wait), pct_serve: num(r.pct_serve),
     })).filter(r => r.date && r.token);
+    tokenSummaryData = [...new Map(tokenSummaryData.map(r => [r.date + '|' + r.token, r])).values()];
 
     waitDistData = wd.map(r => ({
       date: parseDate(r.date),
@@ -584,6 +588,7 @@ async function loadData() {
       gt60: num(r.gt60), gt60p: num(r.gt60p),
       total: num(r.total),
     })).filter(r => r.date);
+    waitDistData = [...new Map(waitDistData.map(r => [r.date, r])).values()];
 
     document.getElementById('last-updated').textContent =
       'Updated: ' + new Date().toLocaleString('en-MY', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
@@ -905,9 +910,14 @@ function renderTokenSummary() {
     tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No token summary data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
     return;
   }
-  const latest = tokenSummaryData[tokenSummaryData.length - 1].date;
-  const rows   = tokenSummaryData.filter(r => r.date === latest);
-  if (label) label.textContent = latest;
+  const fallback = tokenSummaryData[tokenSummaryData.length - 1].date;
+  const target   = state.dailyDate || fallback;
+  const rows     = tokenSummaryData.filter(r => r.date === target);
+  if (label) label.textContent = target;
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No token summary for ${target}.</td></tr>`;
+    return;
+  }
 
   const rowsHtml = rows.map(r => {
     const wp = r.pct_wait  >= TARGET_PCT ? `<span class="kpi-pill pill-green">${r.pct_wait.toFixed(1)}%</span>`  : `<span class="kpi-pill pill-red">${r.pct_wait.toFixed(1)}%</span>`;
@@ -960,20 +970,26 @@ function renderWaitDist() {
     tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No waiting time distribution data yet.<br><small>Requires aggregate.py update and new Google Sheet tab.</small></td></tr>`;
     return;
   }
-  const latest = waitDistData[waitDistData.length - 1];
-  if (label) label.textContent = latest.date;
+  const fallback = waitDistData[waitDistData.length - 1].date;
+  const target   = state.dailyDate || fallback;
+  const row      = waitDistData.find(r => r.date === target);
+  if (label) label.textContent = target;
+  if (!row) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:20px">No waiting time distribution for ${target}.</td></tr>`;
+    return;
+  }
   const cols = [
-    [latest.lt10,   latest.lt10p],
-    [latest.m10_20, latest.m10_20p],
-    [latest.m20_30, latest.m20_30p],
-    [latest.m30_40, latest.m30_40p],
-    [latest.m40_50, latest.m40_50p],
-    [latest.m50_60, latest.m50_60p],
-    [latest.gt60,   latest.gt60p],
-    [latest.total,  100],
+    [row.lt10,   row.lt10p],
+    [row.m10_20, row.m10_20p],
+    [row.m20_30, row.m20_30p],
+    [row.m30_40, row.m30_40p],
+    [row.m40_50, row.m40_50p],
+    [row.m50_60, row.m50_60p],
+    [row.gt60,   row.gt60p],
+    [row.total,  100],
   ];
   // Avg wait from daily summary for the same date
-  const dayRow  = dailyData.find(d => d.date === latest.date);
+  const dayRow  = dailyData.find(d => d.date === target);
   const avgWait = dayRow ? dayRow.avg_wait_min : null;
 
   // Bucket color: ≤30 min = green, 31–60 min = warn, >60 min = danger, total = blue
@@ -1046,6 +1062,9 @@ function renderDaily() {
   } else {
     stats.innerHTML = `<span style="color:var(--muted)">No daily summary for ${date}</span>`;
   }
+
+  renderTokenSummary();
+  renderWaitDist();
 
   destroyChart('intraday');
   charts.intraday = new Chart(document.getElementById('chart-intraday').getContext('2d'), {
