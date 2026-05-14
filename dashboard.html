@@ -189,8 +189,49 @@
   /* Range info badge */
   .range-info { font-family: var(--fh); font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 10px; border-radius: 20px; background: var(--surface-2); border: 1px solid var(--border); white-space: nowrap; }
 
+  /* KPI period-over-period delta */
+  .kpi-delta { display: flex; align-items: baseline; gap: 6px; font-family: var(--fh); font-size: 11px; font-weight: 700; margin-top: 8px; }
+  .kpi-delta .arrow { font-size: 13px; line-height: 1; }
+  .kpi-delta.up   { color: var(--success); }
+  .kpi-delta.down { color: var(--danger); }
+  .kpi-delta.flat { color: var(--muted); }
+  .kpi-delta.up.is-bad   { color: var(--danger); }
+  .kpi-delta.down.is-good { color: var(--success); }
+  .kpi-delta .delta-vs { font-weight: 500; color: var(--muted); margin-left: 2px; }
+
+  /* Drill-down clickable rows */
+  .clickable-row { cursor: pointer; transition: background .12s; }
+  .clickable-row:hover td { background: var(--primary-dim) !important; }
+  .clickable-row td:first-child::before { content: '↗ '; color: var(--primary); font-weight: 700; opacity: .55; }
+
+  /* Target-breach row highlight */
+  tbody tr.breach td { background: rgba(220, 38, 38, 0.06); }
+  tbody tr.breach:hover td { background: rgba(220, 38, 38, 0.12) !important; }
+  body.dark-mode tbody tr.breach td { background: rgba(220, 38, 38, 0.14); }
+
   @media (max-width: 1280px) { .kpi-grid { grid-template-columns: repeat(3,1fr); } }
-  @media (max-width: 700px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } .page { padding: 16px; } .header, .filter-bar, .tab-bar { padding-left: 16px; padding-right: 16px; } }
+  @media (max-width: 900px)  { .kpi-grid { grid-template-columns: repeat(2,1fr); } }
+  @media (max-width: 700px)  {
+    .page { padding: 14px 12px; }
+    .header, .filter-bar, .tab-bar { padding-left: 12px; padding-right: 12px; }
+    .header h1 { font-size: 17px; }
+    .kpi-card { padding: 14px 14px; }
+    .kpi-value { font-size: 24px; }
+    .card { padding: 14px 14px; }
+    .chart-wrap { height: 260px; }
+    .chart-wrap.tall { height: 300px; }
+    .tab { padding: 7px 12px; font-size: 12px; }
+    .quick-stats { gap: 10px; }
+    .fsep { display: none; }
+    table { font-size: 12px; }
+    thead th, tbody td { padding: 7px 8px; font-size: 11px; }
+  }
+  @media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 22px; }
+    .chart-wrap { height: 220px; }
+    .chart-wrap.tall { height: 260px; }
+  }
 </style>
 </head>
 <body>
@@ -641,6 +682,52 @@ function monthlyStats() {
   return { totalRx, avgPct, avgWait, medWait, avgStaff, totalItem, avgItem, itemDays: itemRows.length, daysCount, ym };
 }
 
+/* Same-day range in the previous month: e.g. latest=2026-05-11 → Apr 1–11 */
+function priorPeriodRange() {
+  if (!dailyData.length) return null;
+  const latest = dailyData[dailyData.length - 1].date;
+  const [y, m, d] = latest.split('-').map(Number);
+  let py = y, pm = m - 1;
+  if (pm < 1) { pm = 12; py -= 1; }
+  const pad = n => String(n).padStart(2, '0');
+  return {
+    start: `${py}-${pad(pm)}-01`,
+    end:   `${py}-${pad(pm)}-${pad(d)}`,
+    label: new Date(py, pm - 1, 1).toLocaleDateString('en-MY', { month: 'short' }),
+  };
+}
+
+/* Stats for any [start, end] range of dailyData (weighted by total_rx where appropriate) */
+function periodStats(startDate, endDate) {
+  const rows = dailyData.filter(r => r.date >= startDate && r.date <= endDate);
+  if (!rows.length) return null;
+  const totalRx   = rows.reduce((s, r) => s + r.total_rx, 0);
+  const wPct      = totalRx ? rows.reduce((s, r) => s + r.within_30min_pct * r.total_rx, 0) / totalRx : 0;
+  const wAvg      = totalRx ? rows.reduce((s, r) => s + r.avg_wait_min     * r.total_rx, 0) / totalRx : 0;
+  const wMed      = rows.reduce((s, r) => s + r.median_wait_min, 0) / rows.length;
+  const itemRows  = rows.filter(r => r.n_item > 0);
+  const totalItem = itemRows.reduce((s, r) => s + r.n_item, 0);
+  return { totalRx, wPct, wAvg, wMed, totalItem, days: rows.length };
+}
+
+/* Render a delta indicator: ▲ / ▼ / → with semantic coloring */
+function deltaPill(curr, prev, opts) {
+  if (prev === null || prev === undefined || prev === 0 || !isFinite(curr) || !isFinite(prev)) return '';
+  const diff = curr - prev;
+  const epsilon = opts.epsilon ?? 0.05;
+  const label = opts.label || 'prior';
+  if (Math.abs(diff) < epsilon) {
+    return `<div class="kpi-delta flat"><span class="arrow">→</span>flat<span class="delta-vs">vs ${label}</span></div>`;
+  }
+  const dir = diff > 0 ? 'up' : 'down';
+  const arrow = diff > 0 ? '▲' : '▼';
+  let cls = dir;
+  if (opts.neutral)          cls = 'flat';
+  else if (opts.lowerBetter) cls += (diff > 0 ? ' is-bad' : ' is-good');
+  const fmt = opts.format || ((x) => Math.abs(x).toFixed(1) + (opts.unit || ''));
+  return `<div class="kpi-delta ${cls}"><span class="arrow">${arrow}</span>${fmt(diff)}<span class="delta-vs">vs ${label}</span></div>`;
+}
+
 function staffTotal(r) {
   let t = 0;
   if (state.staffTypes.has('PF'))  t += r.n_PF;
@@ -750,6 +837,13 @@ function renderKPIs() {
   const mo = monthlyStats();
   const mLabel = mo ? mo.ym.replace('-', '/') : '';
 
+  // Period-over-period: this MTD vs same-day range last month
+  const mtdStart = latest.date.slice(0, 8) + '01';
+  const curMTD   = periodStats(mtdStart, latest.date);
+  const prior    = priorPeriodRange();
+  const priMTD   = prior ? periodStats(prior.start, prior.end) : null;
+  const pLabel   = prior ? prior.label : '';
+
   function moSection(rows) {
     if (!mo) return '';
     return `<hr class="kpi-divider">
@@ -769,6 +863,7 @@ function renderKPIs() {
       value: within.toFixed(1), unit: '%',
       sub: `Latest: ${latest.date}`,
       pill: targetMet ? `<span class="kpi-pill pill-green">▲ on target</span>` : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT-within).toFixed(1)}% below</span>`,
+      delta: (curMTD && priMTD) ? deltaPill(curMTD.wPct, priMTD.wPct, { label: pLabel, unit: 'pp', epsilon: 0.1 }) : '',
       mo: moSection([['Avg %', mo ? mo.avgPct.toFixed(1) : '-', '%']]),
     },
     {
@@ -777,6 +872,10 @@ function renderKPIs() {
       value: latest.total_rx.toLocaleString(), unit: '',
       sub: `Latest: ${latest.date}`,
       pill: '',
+      delta: (curMTD && priMTD) ? deltaPill(curMTD.totalRx, priMTD.totalRx, {
+        label: pLabel, neutral: true, epsilon: 1,
+        format: d => `${d > 0 ? '+' : '-'}${Math.abs(d).toLocaleString()} Rx (${(Math.abs(d)/priMTD.totalRx*100).toFixed(1)}%)`,
+      }) : '',
       mo: mo ? moSection([['Avg/day', avgRxPerDay.toLocaleString(), 'Rx'], ['Month total', mo.totalRx.toLocaleString(), 'Rx']]) : '',
     },
     {
@@ -784,6 +883,7 @@ function renderKPIs() {
       label: 'Avg wait',
       value: latest.avg_wait_min.toFixed(1), unit: 'min',
       sub: '', pill: '',
+      delta: (curMTD && priMTD) ? deltaPill(curMTD.wAvg, priMTD.wAvg, { label: pLabel, unit: 'min', lowerBetter: true, epsilon: 0.1 }) : '',
       mo: moSection([['Avg', mo ? mo.avgWait.toFixed(1) : '-', 'min']]),
     },
     {
@@ -791,6 +891,7 @@ function renderKPIs() {
       label: 'Median wait',
       value: latest.median_wait_min.toFixed(1), unit: 'min',
       sub: '', pill: '',
+      delta: (curMTD && priMTD) ? deltaPill(curMTD.wMed, priMTD.wMed, { label: pLabel, unit: 'min', lowerBetter: true, epsilon: 0.1 }) : '',
       mo: moSection([['Avg median', mo ? mo.medWait.toFixed(1) : '-', 'min']]),
     },
     {
@@ -799,6 +900,7 @@ function renderKPIs() {
       value: staffTot || '—', unit: '',
       sub: `PF ${latest.n_PF} · PRP ${latest.n_PRP} · PPF ${latest.n_PPF}`,
       pill: '',
+      delta: '',
       mo: mo && mo.avgStaff !== null ? moSection([['Avg total', mo.avgStaff.toFixed(1), 'staff']]) : '',
     },
     {
@@ -807,6 +909,10 @@ function renderKPIs() {
       value: latest.n_item ? latest.n_item.toLocaleString() : '—', unit: '',
       sub: latest.n_item ? `Latest: ${latest.date}` : 'Not yet entered',
       pill: '',
+      delta: (curMTD && priMTD && priMTD.totalItem > 0) ? deltaPill(curMTD.totalItem, priMTD.totalItem, {
+        label: pLabel, neutral: true, epsilon: 1,
+        format: d => `${d > 0 ? '+' : '-'}${Math.abs(d).toLocaleString()} items (${(Math.abs(d)/priMTD.totalItem*100).toFixed(1)}%)`,
+      }) : '',
       mo: mo && mo.avgItem !== null ? moSection([
         ['Avg/day',     Math.round(mo.avgItem).toLocaleString(), 'items'],
         ['Month total', mo.totalItem.toLocaleString(),           'items'],
@@ -820,6 +926,7 @@ function renderKPIs() {
       <div class="kpi-value">${c.value}${c.unit ? `<span class="kpi-unit">${c.unit}</span>` : ''}</div>
       ${c.sub ? `<div class="kpi-sub">${c.sub}</div>` : ''}
       ${c.pill}
+      ${c.delta}
       ${c.mo}
     </div>`).join('');
 }
@@ -897,7 +1004,8 @@ function renderDailyBreakdown() {
   const bodyHtml = sorted.map(r => {
     const w = wdByDate[r.date] || {};
     const pctCls = r.within_30min_pct >= TARGET_PCT ? 'pill-green' : 'pill-red';
-    return `<tr>
+    const breachCls = r.within_30min_pct < TARGET_PCT ? ' breach' : '';
+    return `<tr class="clickable-row${breachCls}" data-date="${r.date}" title="Click to view ${r.date} in Daily Operations">
       <td class="svc-label">${r.date}</td>
       <td class="num">${r.total_rx ? r.total_rx.toLocaleString() : '—'}</td>
       <td class="num">${r.n_item ? r.n_item.toLocaleString() : '—'}</td>
@@ -945,6 +1053,25 @@ function renderDailyBreakdown() {
   </tr>`;
 
   tbody.innerHTML = bodyHtml + totalRow;
+
+  // Wire drill-down: clicking a row jumps to Tab 2 with that date selected
+  tbody.querySelectorAll('tr.clickable-row').forEach(tr => {
+    tr.addEventListener('click', () => drillToDailyView(tr.dataset.date));
+  });
+}
+
+/* Switch to Daily Operations tab with a specific date selected */
+function drillToDailyView(dateStr) {
+  if (!dateStr) return;
+  state.dailyDate = dateStr;
+  const picker = document.getElementById('daily-date');
+  if (picker) picker.value = dateStr;
+  // Activate the daily tab
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'daily'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-daily'));
+  state.activeTab = 'daily';
+  renderDaily();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ─── Tab 2: token summary table ─── */
