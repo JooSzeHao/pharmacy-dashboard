@@ -1493,7 +1493,9 @@ function renderHeatmaps(theme) {
 
   // Build a matrix from rows: counts of (x-bin, y-bin)
   function buildMatrix(rows, getX, xStart, xBinSize) {
-    if (!rows.length) return { data: [], xLabels: [], maxCount: 0 };
+    const yLabelsEmpty = [];
+    for (let yi = 0; yi < Y_BINS; yi++) yLabelsEmpty.push(`${yi*Y_BIN_SIZE}-${(yi+1)*Y_BIN_SIZE}%`);
+    if (!rows.length) return { data: [], xLabels: [], yLabels: yLabelsEmpty, maxCount: 0 };
     const xMax  = Math.max(...rows.map(getX));
     const xBins = Math.max(1, Math.ceil((xMax + 1 - xStart) / xBinSize));
     const xLabels = [];
@@ -1541,7 +1543,7 @@ function renderHeatmaps(theme) {
       data: {
         datasets: [{
           data: matrix.data,
-          backgroundColor: ctx => heatColor(ctx.raw.v, matrix.maxCount),
+          backgroundColor: ctx => ctx.raw ? heatColor(ctx.raw.v, matrix.maxCount) : 'transparent',
           borderColor: theme.grid,
           borderWidth: 1,
           width:  ({ chart }) => (chart.chartArea?.width  || 0) / Math.max(1, matrix.xLabels.length) - 2,
@@ -1553,18 +1555,22 @@ function renderHeatmaps(theme) {
         plugins: {
           legend: { display: false },
           datalabels: {
-            display: ctx => ctx.dataset.data[ctx.dataIndex].v > 0,
+            display: ctx => {
+              const cell = ctx.dataset.data[ctx.dataIndex];
+              return cell && cell.v > 0;
+            },
             color: ctx => {
-              const v = ctx.dataset.data[ctx.dataIndex].v;
-              return matrix.maxCount && (v / matrix.maxCount) > 0.55 ? '#fff' : theme.text;
+              const cell = ctx.dataset.data[ctx.dataIndex];
+              if (!cell) return theme.text;
+              return matrix.maxCount && (cell.v / matrix.maxCount) > 0.55 ? '#fff' : theme.text;
             },
             font: { family: 'Noto Sans Mono', weight: '700', size: 11 },
-            formatter: cell => cell.v,
+            formatter: cell => cell ? cell.v : '',
           },
           tooltip: {
             callbacks: {
-              title: ctx => `${ctx[0].raw.x}  ·  ${ctx[0].raw.y}`,
-              label: ctx => `${ctx.raw.v} day${ctx.raw.v !== 1 ? 's' : ''}`,
+              title: ctx => ctx[0] && ctx[0].raw ? `${ctx[0].raw.x}  ·  ${ctx[0].raw.y}` : '',
+              label: ctx => ctx.raw ? `${ctx.raw.v} day${ctx.raw.v !== 1 ? 's' : ''}` : '',
             },
           },
         },
