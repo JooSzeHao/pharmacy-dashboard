@@ -351,7 +351,7 @@
 
     <div class="row" style="grid-template-columns:1fr;">
       <div class="card">
-        <h3>Within-30-min % <span class="sub">vs 95% target · selected range</span>
+        <h3>Within-30-min % <span class="sub" id="trend-pct-sub">vs 95% target · selected range</span>
           <button class="export-btn" onclick="exportChart('trendPct','within-30min-trend')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-trend-pct"></canvas></div>
       </div>
@@ -392,6 +392,7 @@
               <th class="num">&gt; 60 min</th>
               <th class="num">% &lt; 30 min</th>
               <th class="num">Avg wait (min)</th>
+              <th class="num">Bil Staf <span class="sub" style="font-weight:500;color:var(--muted);font-size:9px">PF, PRP, PPF</span></th>
             </tr></thead>
             <tbody></tbody>
           </table>
@@ -418,6 +419,13 @@
         <h3>Intraday wait time &amp; queue length <span class="sub">30-min buckets</span>
           <button class="export-btn" onclick="exportChart('intraday','intraday-chart')">⬇ PNG</button></h3>
         <div class="chart-wrap tall"><canvas id="chart-intraday"></canvas></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr;">
+      <div class="card">
+        <h3>Cumulative % within 30 min through the day <span class="sub">running tally · selected day</span>
+          <button class="export-btn" onclick="exportChart('intradayCumPct','intraday-cum-pct')">⬇ PNG</button></h3>
+        <div class="chart-wrap tall"><canvas id="chart-intraday-cum-pct"></canvas></div>
       </div>
     </div>
     <div class="row" style="grid-template-columns:1fr;">
@@ -682,6 +690,7 @@ async function loadData() {
       time_bucket: normalizeBucket(r.time_bucket),
       avg_wait_served_min: orNull(r.avg_wait_served_min),
       live_patients_peak:  orNull(r.live_patients_peak),
+      cum_within_30min_pct: orNull(r.cum_within_30min_pct),
     })).filter(r => r.date && r.time_bucket);
     intradayData = [...new Map(intradayData.map(r => [r.date + '|' + r.time_bucket, r])).values()];
 
@@ -819,16 +828,26 @@ function sparkline(values, color, opts) {
     if (v === null || v === undefined || !isFinite(v)) return;
     const x = PAD + i * xStep;
     const y = H - PAD - ((v - min) / range) * (H - 2*PAD);
-    points.push([x, y]);
+    points.push([x, y, i]);
   });
   if (points.length < 2) return '';
   const pathD = 'M ' + points.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' L ');
   const areaD = pathD + ` L ${points[points.length-1][0].toFixed(1)},${H-PAD} L ${points[0][0].toFixed(1)},${H-PAD} Z`;
   const last = points[points.length-1];
+  // When opts.dotColors is provided, draw a colored dot at every point. Otherwise just the last.
+  let dotsSvg;
+  if (opts.dotColors) {
+    dotsSvg = points.map(p => {
+      const dc = opts.dotColors[p[2]];
+      return dc ? `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2" fill="${dc}"/>` : '';
+    }).join('');
+  } else {
+    dotsSvg = `<circle cx="${last[0]}" cy="${last[1]}" r="2.4" fill="${color}"/>`;
+  }
   return `<svg class="kpi-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:${H}px;display:block;margin-top:8px;">
     <path d="${areaD}" fill="${color}" fill-opacity="0.14"/>
     <path d="${pathD}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="${last[0]}" cy="${last[1]}" r="2.4" fill="${color}"/>
+    ${dotsSvg}
   </svg>`;
 }
 
@@ -955,6 +974,9 @@ function renderKPIs() {
   // Sparkline series — last 14 days (oldest -> newest)
   const last14 = dailyData.slice(-14);
   const sparkWithin = last14.map(r => r.within_30min_pct);
+  const sparkWithinDotColors = sparkWithin.map(p =>
+    p === null || p === undefined ? null : (p >= TARGET_PCT ? PALETTE.success : PALETTE.danger)
+  );
   const sparkRx     = last14.map(r => r.total_rx);
   const sparkAvg    = last14.map(r => r.avg_wait_min);
   const sparkMed    = last14.map(r => r.median_wait_min);
@@ -981,7 +1003,7 @@ function renderKPIs() {
       value: within.toFixed(1), unit: '%',
       sub: '',
       badge: `<div class="kpi-date-badge"><span class="ico">📅</span>${latest.date}</div>`,
-      spark: sparkline(sparkWithin, targetMet ? PALETTE.success : PALETTE.danger, { height: 40 }),
+      spark: sparkline(sparkWithin, targetMet ? PALETTE.success : PALETTE.danger, { height: 40, dotColors: sparkWithinDotColors }),
       pill: targetMet ? `<span class="kpi-pill pill-green">▲ on target</span>` : `<span class="kpi-pill pill-red">▼ ${(TARGET_PCT-within).toFixed(1)}% below</span>`,
       delta: (curMTD && priMTD) ? deltaPill(curMTD.wPct, priMTD.wPct, { label: pLabel, unit: 'pp', epsilon: 0.1 }) : '',
       mo: moSection([['Avg %', mo ? mo.avgPct.toFixed(1) : '-', '%']]),
@@ -1069,10 +1091,23 @@ function renderTrends() {
   const medSeries  = rows.map(r => r.median_wait_min);
   const itemSeries = rows.map(r => r.n_item > 0 ? r.n_item : null);
 
+  // Per-point coloring: green dot if day hit target, red if below
+  const pctPointColors = pctSeries.map(p => p === null ? 'transparent' : (p >= TARGET_PCT ? PALETTE.success : PALETTE.danger));
+  // Update card subtitle with "X of Y days hit target"
+  const hitDays   = pctSeries.filter(p => p !== null && p >= TARGET_PCT).length;
+  const totalDays = pctSeries.filter(p => p !== null).length;
+  const trendPctSubEl = document.getElementById('trend-pct-sub');
+  if (trendPctSubEl) trendPctSubEl.textContent = `vs ${TARGET_PCT}% target · ${hitDays} of ${totalDays} days hit target`;
+
   charts.trendPct = new Chart(document.getElementById('chart-trend-pct').getContext('2d'), {
     type: 'line',
     data: { labels, datasets: [
-      { label: 'Within 30 min %', data: pctSeries, borderColor: PALETTE.primary, backgroundColor: PALETTE_FILL.primary, tension: 0.25, fill: true, pointRadius: 2 },
+      { label: 'Within 30 min %', data: pctSeries,
+        borderColor: PALETTE.primary, backgroundColor: PALETTE_FILL.primary,
+        tension: 0.25, fill: true,
+        pointRadius: 4, pointHoverRadius: 6,
+        pointBackgroundColor: pctPointColors,
+        pointBorderColor: pctPointColors },
       { label: `${TARGET_PCT}% target`, data: labels.map(() => TARGET_PCT), borderColor: PALETTE.success, borderDash: [6,4], pointRadius: 0, fill: false },
     ]},
     options: { maintainAspectRatio: false, responsive: true,
@@ -1126,7 +1161,7 @@ function renderDailyBreakdown() {
     subEl.textContent = `${monthLabel} · one row per day`;
   }
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;color:var(--muted);padding:18px">No daily data for ${ym || 'this period'}.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;color:var(--muted);padding:18px">No daily data for ${ym || 'this period'}.</td></tr>`;
     return;
   }
   const wdByDate = Object.fromEntries(waitDistData.map(w => [w.date, w]));
@@ -1151,6 +1186,7 @@ function renderDailyBreakdown() {
       <td class="num">${cell(w.gt60)}</td>
       <td class="num"><span class="kpi-pill ${pctCls}">${r.within_30min_pct.toFixed(1)}%</span></td>
       <td class="num">${r.avg_wait_min.toFixed(1)}</td>
+      <td class="num">${(r.n_PF || r.n_PRP || r.n_PPF) ? `${r.n_PF||0}, ${r.n_PRP||0}, ${r.n_PPF||0}` : '—'}</td>
     </tr>`;
   }).join('');
 
@@ -1169,6 +1205,11 @@ function renderDailyBreakdown() {
   const wPct = totalRx ? sorted.reduce((s, r) => s + r.within_30min_pct * r.total_rx, 0) / totalRx : 0;
   const wAvg = totalRx ? sorted.reduce((s, r) => s + r.avg_wait_min     * r.total_rx, 0) / totalRx : 0;
   const totalPctCls = wPct >= TARGET_PCT ? 'pill-green' : 'pill-red';
+  // Per-day average of each staff role, across days that actually had staff entered
+  const staffDays = sorted.filter(r => (r.n_PF + r.n_PRP + r.n_PPF) > 0);
+  const avgPF  = staffDays.length ? staffDays.reduce((s,r) => s + r.n_PF,  0) / staffDays.length : 0;
+  const avgPRP = staffDays.length ? staffDays.reduce((s,r) => s + r.n_PRP, 0) / staffDays.length : 0;
+  const avgPPF = staffDays.length ? staffDays.reduce((s,r) => s + r.n_PPF, 0) / staffDays.length : 0;
 
   const totalRow = `<tr style="font-weight:700;border-top:2px solid var(--border);background:var(--bg-2);">
     <td class="svc-label">Total / Avg</td>
@@ -1183,6 +1224,7 @@ function renderDailyBreakdown() {
     <td class="num">${sumGt60}</td>
     <td class="num"><span class="kpi-pill ${totalPctCls}">${wPct.toFixed(1)}%</span></td>
     <td class="num">${wAvg.toFixed(1)}</td>
+    <td class="num">${staffDays.length ? `${avgPF.toFixed(1)}, ${avgPRP.toFixed(1)}, ${avgPPF.toFixed(1)}` : '—'}</td>
   </tr>`;
 
   tbody.innerHTML = bodyHtml + totalRow;
@@ -1437,6 +1479,30 @@ function renderDaily() {
     },
   });
 
+  // New: cumulative % within 30 min through the day
+  const cumPctData = INTRADAY_BUCKETS.map(b => byBucket[b] != null ? byBucket[b].cum_within_30min_pct : null);
+  destroyChart('intradayCumPct');
+  charts.intradayCumPct = new Chart(document.getElementById('chart-intraday-cum-pct').getContext('2d'), {
+    type: 'line',
+    plugins: [lunchShade],
+    data: {
+      labels: INTRADAY_BUCKETS,
+      datasets: [
+        { label: 'Cumulative % within 30 min', data: cumPctData, borderColor: PALETTE.primary, backgroundColor: PALETTE_FILL.primary, tension: 0.25, fill: true, pointRadius: 3, spanGaps: false },
+        { label: `${TARGET_PCT}% target`, data: INTRADAY_BUCKETS.map(() => TARGET_PCT), borderColor: PALETTE.success, borderDash: [6,4], borderWidth: 1.5, pointRadius: 0, fill: false, tension: 0 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false, responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { labels: { color: theme.text, font: { family: 'Figtree', weight: '600' } } }, datalabels: { display: false } },
+      scales: {
+        x: { ticks: { color: theme.muted, font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Time of day', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
+        y: { min: 0, max: 100, ticks: { color: theme.muted, callback: v => v + '%', font: { family: 'Noto Sans Mono' } }, grid: { color: theme.grid }, title: { display: true, text: 'Cumulative % within 30 min', color: theme.muted, font: { family: 'Figtree', weight: '600' } } },
+      },
+    },
+  });
+
 }
 
 /* ─── Tab 3: service chart + scatter plots ─── */
@@ -1488,13 +1554,14 @@ function renderHeatmaps(theme) {
   theme = theme || chartTheme();
   destroyChart('hmVol'); destroyChart('hmStaff'); destroyChart('hmItem');
 
-  const Y_BIN_SIZE = 10;  // 10% per Y bin
-  const Y_BINS     = 10;  // 0-10, 10-20, ..., 90-100
+  // Y bin edges — split 90-100% into 90-95 and 95-100 so the 95% target is visible
+  const Y_EDGES = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 95, 100];
+  const Y_BINS  = Y_EDGES.length - 1;
 
   // Build a matrix from rows: counts of (x-bin, y-bin)
   function buildMatrix(rows, getX, xStart, xBinSize) {
     const yLabelsEmpty = [];
-    for (let yi = 0; yi < Y_BINS; yi++) yLabelsEmpty.push(`${yi*Y_BIN_SIZE}-${(yi+1)*Y_BIN_SIZE}%`);
+    for (let yi = 0; yi < Y_BINS; yi++) yLabelsEmpty.push(`${Y_EDGES[yi]}-${Y_EDGES[yi+1]}%`);
     if (!rows.length) return { data: [], xLabels: [], yLabels: yLabelsEmpty, maxCount: 0 };
     const xMax  = Math.max(...rows.map(getX));
     const xBins = Math.max(1, Math.ceil((xMax + 1 - xStart) / xBinSize));
@@ -1504,14 +1571,17 @@ function renderHeatmaps(theme) {
       xLabels.push(`${lo}-${lo + xBinSize}`);
     }
     const yLabels = [];
-    for (let yi = 0; yi < Y_BINS; yi++) yLabels.push(`${yi*Y_BIN_SIZE}-${(yi+1)*Y_BIN_SIZE}%`);
+    for (let yi = 0; yi < Y_BINS; yi++) yLabels.push(`${Y_EDGES[yi]}-${Y_EDGES[yi+1]}%`);
 
     const counts = {};
     rows.forEach(r => {
       const x = getX(r);
       if (x < xStart) return;
       const xi = Math.min(xBins - 1, Math.floor((x - xStart) / xBinSize));
-      const yi = Math.min(Y_BINS - 1, Math.floor(r.within_30min_pct / Y_BIN_SIZE));
+      let yi = Y_BINS - 1;
+      for (let i = 0; i < Y_BINS; i++) {
+        if (r.within_30min_pct >= Y_EDGES[i] && r.within_30min_pct < Y_EDGES[i+1]) { yi = i; break; }
+      }
       counts[`${xi}|${yi}`] = (counts[`${xi}|${yi}`] || 0) + 1;
     });
 
