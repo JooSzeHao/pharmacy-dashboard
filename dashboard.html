@@ -535,6 +535,10 @@ body[data-tab="1"] .filter-bar { display: none; }
 .target-note { margin: 10px 0 0; }
 .chart-empty { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px; text-align: center; }
 
+/* Morphing icons (morphicons <morph-icon>): static SVG until the element loads */
+morph-icon { display: inline-flex; line-height: 0; flex-shrink: 0; }
+.st-chip morph-icon svg { width: 13px; height: 13px; }
+
 /* Hero: neutral (non-status) stats share the size but not the colour */
 .hero-stat.neutral .v small { font-size: 22px; }
 .hero-stat .hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
@@ -668,7 +672,7 @@ td .dow { color: var(--muted); font-weight: 400; margin-right: 4px; }
     <span class="side-label">Print / PDF</span>
   </button>
   <button class="side-btn" id="theme-toggle" title="Switch light / dark">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <morph-icon id="theme-ico" size="20" stroke-width="1.8" spring="snappy"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486C20.7239 17.3235 16.6804 21.0863 11.8366 20.9994C6.9929 20.9125 3.087 17.007 2.9996 12.1633C2.9121 7.3195 6.6745 3.2757 11.512 3.014C11.917 2.992 12.129 3.474 11.914 3.817C10.4332 6.1863 10.7837 9.2641 12.7593 11.2397C14.7349 13.2153 17.8127 13.5658 20.182 12.085C20.526 11.87 21.007 12.081 20.985 12.486"/></svg></morph-icon>
     <span class="side-label">Dark theme</span>
   </button>
   <div class="side-sep"></div>
@@ -722,6 +726,11 @@ td .dow { color: var(--muted); font-weight: 400; margin-right: 4px; }
   </main>
 </div>
 
+<!-- morphicons: animates icon changes (theme, status chips). If it can't load, the static icons stay. -->
+<script type="module">
+  import { defineMorphIcon } from 'https://cdn.jsdelivr.net/npm/morphicons@1.7.1/dist/element.js';
+  defineMorphIcon();
+</script>
 <script>
 /* ════════════════════════════════════════════════════════════════════════════
    Bento Dashboard Design Kit — Chart.js theme helpers
@@ -979,6 +988,34 @@ const stale  = [true, true, true];
 const charts = [{}, {}, {}];
 let printing = false;
 
+/* Lucide icons (moon, sun, circle-check, triangle-alert, circle-alert) as single paths,
+   pre-normalised with morphicons' computeInitialD so static and animated drawings match */
+const MI = {
+  moon: 'M20.985 12.486C20.7239 17.3235 16.6804 21.0863 11.8366 20.9994C6.9929 20.9125 3.087 17.007 2.9996 12.1633C2.9121 7.3195 6.6745 3.2757 11.512 3.014C11.917 2.992 12.129 3.474 11.914 3.817C10.4332 6.1863 10.7837 9.2641 12.7593 11.2397C14.7349 13.2153 17.8127 13.5658 20.182 12.085C20.526 11.87 21.007 12.081 20.985 12.486',
+  sun: 'M16 12C16 14.2091 14.2091 16 12 16C9.7909 16 8 14.2091 8 12C8 9.7909 9.7909 8 12 8C14.2091 8 16 9.7909 16 12ZM12 2C12 2.6667 12 3.3333 12 4M12 20C12 20.6667 12 21.3333 12 22M4.93 4.93C5.4 5.4 5.87 5.87 6.34 6.34M17.66 17.66C18.13 18.13 18.6 18.6 19.07 19.07M2 12C2.6667 12 3.3333 12 4 12M20 12C20.6667 12 21.3333 12 22 12M6.34 17.66C5.87 18.13 5.4 18.6 4.93 19.07M19.07 4.93C18.6 5.4 18.13 5.87 17.66 6.34',
+  ok: 'M22 12C22 17.5228 17.5228 22 12 22C6.4772 22 2 17.5228 2 12C2 6.4772 6.4772 2 12 2C17.5228 2 22 6.4772 22 12ZM16 9C14.1667 10.8333 12.3333 12.6667 10.5 14.5C9.6667 13.6667 8.8333 12.8333 8 12',
+  warn: 'M21.73 18C19.0633 13.3333 16.3967 8.6667 13.73 4C13.3749 3.3734 12.7103 2.9861 11.99 2.9861C11.2697 2.9861 10.6051 3.3734 10.25 4C7.5833 8.6667 4.9167 13.3333 2.25 18C1.8911 18.6216 1.8928 19.3878 2.2544 20.0078C2.6161 20.6278 3.2823 21.0065 4 21C9.3333 21 14.6667 21 20 21C20.7142 20.9993 21.3737 20.6178 21.7305 19.9991C22.0873 19.3804 22.0871 18.6185 21.73 18M12 9C12 10.3333 12 11.6667 12 13M12 17C12.0033 17 12.0067 17 12.01 17',
+  bad: 'M22 12C22 17.5228 17.5228 22 12 22C6.4772 22 2 17.5228 2 12C2 6.4772 6.4772 2 12 2C17.5228 2 22 6.4772 22 12ZM12 8C12 9.3333 12 10.6667 12 12M12 16C12.0033 16 12.0067 16 12.01 16',
+};
+const STATUS_ICON = { 'st-ok': 'ok', 'st-warn': 'warn', 'st-bad': 'bad' };
+const lastStatus = {};                       // hero key → last status icon shown
+const morphReady = () => !!(window.customElements && customElements.get('morph-icon'));
+const miSvg = (key, size = 13, sw = 2.2) => `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${MI[key]}"/></svg>`;
+/* Show an icon on a <morph-icon>: animate when the element is live, else swap the static path */
+function setIcon(el, key, animate = true) {
+  if (!el) return;
+  if (typeof el.morphTo === 'function') { animate ? el.morphTo(MI[key]) : el.set(MI[key]); return; }
+  const p = el.querySelector('path'); if (p) p.setAttribute('d', MI[key]);
+}
+/* After a hero renders, morph each status icon from what it showed last time */
+function animateStatusIcons(root) {
+  root.querySelectorAll('morph-icon[data-k]').forEach(el => {
+    const { k, st } = el.dataset;
+    if (el.dataset.from !== st) setIcon(el, st, true);
+    lastStatus[k] = st;
+  });
+}
+
 /* ── Small helpers ── */
 const $   = s => document.querySelector(s);
 const sum = (a, f) => a.reduce((s, r) => s + f(r), 0);
@@ -1225,10 +1262,14 @@ function statusBadge(pct) {
   const cls = pct >= TARGET ? 'badge-green' : pct >= NEAR ? 'badge-amber' : 'badge-red';
   return `<span class="badge ${cls}">${pct.toFixed(1)}%</span>`;
 }
-function heroStat(label, pct, gap) {
+function heroStat(label, pct, gap, key) {
   const st = kpiStatus(pct);
+  const ico = STATUS_ICON[st.cls];
+  // Start from the previous status so the icon can morph into the new one
+  const from = ico && morphReady() && lastStatus[key] ? lastStatus[key] : ico;
+  const icon = ico ? `<morph-icon data-k="${key}" data-st="${ico}" data-from="${from}" size="13" stroke-width="2.2" spring="snappy">${miSvg(from)}</morph-icon>` : '';
   return `<div class="hero-stat ${st.cls}"><div class="v">${fmt1(pct)}<small>%</small></div>
-    <span class="st-chip">${st.label}</span><div class="l">${label}</div><div class="gap">${gap}</div></div>`;
+    <span class="st-chip">${icon}${st.label}</span><div class="l">${label}</div><div class="gap">${gap}</div></div>`;
 }
 function heroNeutral(value, unit, label, hint = '') {
   return `<div class="hero-stat neutral"><div class="v">${value}${unit ? `<small>${unit}</small>` : ''}</div>
@@ -1286,9 +1327,9 @@ function renderOverview() {
 
   const hero = `<div class="hero"><h1>Seen within 30 min,<br>latest day <span>${DOW_LONG[toD(latest).getDay()]} ${fmtDayY(latest)}</span></h1>
     <div class="hero-stats">
-      ${heroStat(`Latest day · ${fmtDay(latest)}`, sDay.pct, `<b>${fmtN(over)}</b> of ${fmtN(sDay.rx)} patients waited over ${TARGET_WAIT_MIN} min`)}
-      ${heroStat(`Month to date · ${MON[+ym.slice(5) - 1]}`, sMtd.pct, gapText(sMtd, latest, monthEnd, MON[+ym.slice(5) - 1]))}
-      ${heroStat(`Year to date · ${yr}`, sYtd.pct, gapText(sYtd, latest, `${yr}-12-31`, yr))}
+      ${heroStat(`Latest day · ${fmtDay(latest)}`, sDay.pct, `<b>${fmtN(over)}</b> of ${fmtN(sDay.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'day')}
+      ${heroStat(`Month to date · ${MON[+ym.slice(5) - 1]}`, sMtd.pct, gapText(sMtd, latest, monthEnd, MON[+ym.slice(5) - 1]), 'mtd')}
+      ${heroStat(`Year to date · ${yr}`, sYtd.pct, gapText(sYtd, latest, `${yr}-12-31`, yr), 'ytd')}
     </div></div>`;
 
   // Progress pills: each service on the latest day, then the selected range (outline = cumulative)
@@ -1490,7 +1531,7 @@ function renderDaily() {
 
   const hero = `<div class="hero"><h1>Daily operations,<br>${DOW_LONG[toD(date).getDay()]} <span>${fmtDayY(date)}</span></h1>
     <div class="hero-stats">
-      ${heroStat('Within 30 min', st.pct, `<b>${fmtN(over)}</b> of ${fmtN(st.rx)} patients waited over ${TARGET_WAIT_MIN} min`)}
+      ${heroStat('Within 30 min', st.pct, `<b>${fmtN(over)}</b> of ${fmtN(st.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'daily')}
       ${heroNeutral(fmt1(day.avg_wait_min), 'min', 'Average wait', `Median ${fmt1(day.median_wait_min)} min`)}
       ${heroNeutral(peak.t ? fmtN(peak.v) : '—', '', 'Peak queue', peak.t ? `At ${peak.t} · ${fmtN(st.rx)} Rx · ${day.n_item ? fmtN(day.n_item) + ' items' : 'items not entered'}` : 'No intraday data')}
     </div></div>
@@ -1863,6 +1904,7 @@ function renderCurrent() {
   if (!stale[t]) return;
   destroyTab(t);
   [renderOverview, renderDaily, renderServices][t]();
+  animateStatusIcons($('#panel-' + t));
   stale[t] = false;
   updateSideInfo();
 }
@@ -1934,8 +1976,13 @@ document.addEventListener('click', e => {
 });
 
 // Theme
-function syncThemeBtn() { $('#theme-toggle .side-label').textContent = document.documentElement.dataset.theme === 'dark' ? 'Light theme' : 'Dark theme'; }
-$('#theme-toggle').addEventListener('click', () => toggleTheme(() => { syncThemeBtn(); markAllStale(); renderCurrent(); }));
+/* Moon in light ("switch to dark"), sun in dark ("switch to light") */
+function syncThemeBtn(animate = false) {
+  const dark = document.documentElement.dataset.theme === 'dark';
+  $('#theme-toggle .side-label').textContent = dark ? 'Light theme' : 'Dark theme';
+  setIcon($('#theme-ico'), dark ? 'sun' : 'moon', animate);
+}
+$('#theme-toggle').addEventListener('click', () => toggleTheme(() => { syncThemeBtn(true); markAllStale(); renderCurrent(); }));
 syncThemeBtn();
 
 // Chart labels (global switch, off on phones by default)
