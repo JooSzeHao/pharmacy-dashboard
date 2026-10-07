@@ -596,6 +596,82 @@ td .dow { color: var(--muted); font-weight: 400; margin-right: 4px; }
 @media print {
   .card-actions .btn-dl, .card-actions select { display: none !important; }
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Glass layer — light frost on cards, clear chart cards, dark side panel
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --glass:        rgba(255,255,255,.74);
+  --glass-strong: rgba(255,255,255,.88);
+  --glass-edge:   rgba(255,255,255,.75);
+  --glass-hi:     inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(255,255,255,.25);
+  --glass-blur:   blur(14px) saturate(130%);
+  --shadow:       0 1px 2px rgba(28,28,30,.04), 0 18px 40px rgba(28,28,30,.08);
+  --card-solid:   #FFFFFF;
+  --blob-1: rgba(242,194,48,.45);  --blob-2: rgba(46,140,128,.22);
+  --blob-3: rgba(116,98,196,.22);  --blob-4: rgba(201,80,63,.16);
+}
+:root[data-theme="dark"] {
+  --glass:        rgba(30,27,72,.78);
+  --glass-strong: rgba(30,27,72,.92);
+  --glass-edge:   rgba(255,255,255,.12);
+  --glass-hi:     inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.03);
+  --shadow:       0 18px 44px rgba(0,0,0,.35);
+  --blob-1: rgba(124,131,253,.30); --blob-2: rgba(232,121,198,.18);
+  --blob-3: rgba(95,211,195,.12);  --blob-4: rgba(245,198,106,.10);
+}
+
+/* Colour fields behind the glass — without them there's nothing to frost */
+body::before {
+  content: ''; position: fixed; inset: -10vmax; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(28vmax 28vmax at 18% 12%, var(--blob-1), transparent 70%),
+    radial-gradient(30vmax 30vmax at 88% 22%, var(--blob-3), transparent 70%),
+    radial-gradient(34vmax 34vmax at 70% 85%, var(--blob-2), transparent 70%),
+    radial-gradient(26vmax 26vmax at 10% 78%, var(--blob-4), transparent 70%);
+  filter: blur(10px);
+}
+
+.card, .svc-card, .filter-bar, .tab-filter {
+  background: var(--glass);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-edge);
+  box-shadow: var(--shadow), var(--glass-hi);
+}
+/* Dark feature card stays the anchor: smoked glass instead of solid */
+.rank-card {
+  background: rgba(28,28,30,.94); border-color: rgba(255,255,255,.10);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.10);
+}
+:root[data-theme="dark"] .rank-card { background: rgba(44,39,104,.95); border-color: rgba(255,255,255,.12); }
+.side { background: rgba(14,14,16,.97); border: 1px solid rgba(255,255,255,.06); box-shadow: 0 18px 44px rgba(0,0,0,.28); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
+:root[data-theme="dark"] .side { background: rgba(9,7,26,.96); border: 1px solid rgba(255,255,255,.07); box-shadow: 0 18px 44px rgba(0,0,0,.45); }
+
+/* Tables: let the glass through, keep the sticky header readable */
+.table-wrap { border-color: var(--glass-edge); background: rgba(255,255,255,.55); }
+:root[data-theme="dark"] .table-wrap { background: rgba(27,24,64,.6); }
+tbody td { background: transparent; }
+tbody td:first-child, thead th { background: var(--glass-strong); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.prog-bar { background-color: rgba(255,255,255,.25); }
+:root[data-theme="dark"] .prog-bar { background-color: rgba(255,255,255,.03); }
+.toggle-btn, .preset-btn, .view-btn, .btn-dl, select, input[type="date"] { background-color: var(--glass-strong); border-color: var(--glass-edge); }
+.toggle-btn.active, .preset-btn.active { background: var(--pill-on-bg); }
+
+/* Chart cards and service scorecards: clear glass, so charts sit on the colour field. Tables and number cards stay frosted. */
+.card:has(.chart-wrap), .card:has(.gauge-wrap), .svc-card {
+  background: rgba(255,255,255,.10);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border-color: rgba(255,255,255,.55);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+}
+:root[data-theme="dark"] .card:has(.chart-wrap), :root[data-theme="dark"] .card:has(.gauge-wrap), :root[data-theme="dark"] .svc-card {
+  background: rgba(30,27,72,.18); border-color: rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Printing: no blur, plain white */
+@media print { body::before { display: none; } .card, .svc-card { backdrop-filter: none !important; } }
 </style>
 </head>
 <body data-tab="0">
@@ -983,7 +1059,7 @@ const WD_BUCKETS = [
 ];
 
 let data = null;                             // { daily, service, intraday, token, wd, fetchedAt, cached }
-const state = { from: null, to: null, preset: 'ytd', tab: 0, services: new Set(SVC_KEYS), day: null, month: null };
+const state = { from: null, to: null, preset: 'mtd', tab: 0, services: new Set(SVC_KEYS), day: null, month: null };
 const stale  = [true, true, true];
 const charts = [{}, {}, {}];
 let printing = false;
@@ -1893,7 +1969,7 @@ function resetFilters() {
   state.services = new Set(SVC_KEYS);
   state.day = null; state.month = null;
   markAllStale();
-  applyPreset('ytd');
+  applyPreset('mtd');
 }
 
 function markAllStale() { stale.fill(true); }
