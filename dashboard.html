@@ -983,7 +983,7 @@ const WD_BUCKETS = [
 ];
 
 let data = null;                             // { daily, service, intraday, token, wd, fetchedAt, cached }
-const state = { from: null, to: null, preset: 'ytd', tab: 0, services: new Set(SVC_KEYS), day: null, month: null };
+const state = { from: null, to: null, preset: 'mtd', tab: 0, services: new Set(SVC_KEYS), day: null, month: null };
 const stale  = [true, true, true];
 const charts = [{}, {}, {}];
 let printing = false;
@@ -1893,7 +1893,7 @@ function resetFilters() {
   state.services = new Set(SVC_KEYS);
   state.day = null; state.month = null;
   markAllStale();
-  applyPreset('ytd');
+  applyPreset('mtd');
 }
 
 function markAllStale() { stale.fill(true); }
