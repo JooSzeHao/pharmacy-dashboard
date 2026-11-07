@@ -1122,7 +1122,23 @@ function fmtRange(a, b) {
 const fmtStamp = t => new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const fmtPts = d => `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} pts`;
 
-/* ── Data: JSONP fetch from the Google Sheet (gviz) ── */
+/* ── Data source ──
+   Hosted as a Google Apps Script web app (apps-script/), the page asks the script to read the
+   sheet server-side (google.script.run): only Google needs to be reachable and the sheet can
+   stay private. Anywhere else (GitHub Pages, a local file) it reads the sheet's public gviz feed. */
+const IN_APPS_SCRIPT = !!(window.google && google.script && google.script.run);
+function sheetFetch(name) {
+  if (!IN_APPS_SCRIPT) return gvizFetch(SHEET_URL(name));
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('timed out')), 30000);
+    google.script.run
+      .withSuccessHandler(rows => { clearTimeout(timer); resolve(rows || []); })
+      .withFailureHandler(e => { clearTimeout(timer); reject(new Error((e && e.message) || 'sheet could not be read')); })
+      .getSheetRows(name);
+  });
+}
+
+/* JSONP fetch from the sheet's gviz feed (needs "anyone with the link can view") */
 let _cb = 0;
 function gvizFetch(url) {
   return new Promise((resolve, reject) => {
@@ -1222,11 +1238,11 @@ async function loadData() {
   btn.classList.add('busy'); btn.disabled = true;
   try {
     const [d, s, i, tok, wd] = await Promise.all([
-      gvizFetch(SHEET_URL('daily_summary')),
-      gvizFetch(SHEET_URL('service_summary')),
-      gvizFetch(SHEET_URL('intraday')),
-      gvizFetch(SHEET_URL('token_summary')).catch(() => []),
-      gvizFetch(SHEET_URL('wait_dist')).catch(() => []),
+      sheetFetch('daily_summary'),
+      sheetFetch('service_summary'),
+      sheetFetch('intraday'),
+      sheetFetch('token_summary').catch(() => []),
+      sheetFetch('wait_dist').catch(() => []),
     ]);
     data = Object.assign(normalise(d, s, i, tok, wd), { fetchedAt: Date.now(), cached: false });
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
@@ -1237,7 +1253,7 @@ async function loadData() {
     }
     showBanner(data
       ? `Couldn't reach the Google Sheet (${err.message}). Showing the copy fetched ${fmtStamp(data.fetchedAt)} instead.`
-      : `Couldn't reach the Google Sheet (${err.message}), and there's no saved copy on this device. Check the sheet is shared as "anyone with the link can view", then refresh.`);
+      : `Couldn't reach the Google Sheet (${err.message}), and there's no saved copy on this device. ${IN_APPS_SCRIPT ? 'Check the web app is deployed to run as its owner' : 'Check the sheet is shared as "anyone with the link can view"'}, then refresh.`);
   } finally {
     btn.classList.remove('busy'); btn.disabled = false;
   }
