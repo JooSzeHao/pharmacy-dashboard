@@ -1164,14 +1164,34 @@ const fmtPts = d => `${d >= 0 ? '+' : '−'}${Math.abs(d).toFixed(1)} pts`;
    stay private. Anywhere else (GitHub Pages, a local file) it reads the sheet's public gviz feed. */
 const IN_APPS_SCRIPT = !!(window.google && google.script && google.script.run);
 function sheetFetch(name) {
-  if (!IN_APPS_SCRIPT) return gvizFetch(SHEET_URL(name));
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timed out')), 30000);
+  const p = IN_APPS_SCRIPT ? new Promise((resolve, reject) => {
+    // A cold Apps Script start plus a large tab can take a while: allow 90 s before giving up
+    const timer = setTimeout(() => reject(new Error('no answer after 90 s')), 90000);
     google.script.run
       .withSuccessHandler(rows => { clearTimeout(timer); resolve(rows || []); })
       .withFailureHandler(e => { clearTimeout(timer); reject(new Error((e && e.message) || 'sheet could not be read')); })
       .getSheetRows(name);
-  });
+  }) : gvizFetch(SHEET_URL(name));
+  return trackLoad(name, p);
+}
+
+/* Loading progress, shown in the header while the sheet is read, so a slow or failing tab is visible */
+const loadState = { tabs: {}, started: 0, timer: null, active: false };
+function trackLoad(name, p) {
+  loadState.tabs[name] = 'pending';
+  showLoadProgress();
+  return p.then(rows => { loadState.tabs[name] = 'done'; showLoadProgress(); return rows; },
+                err => { loadState.tabs[name] = 'failed'; showLoadProgress(); throw new Error(`${name}: ${err.message}`); });
+}
+function showLoadProgress() {
+  const tabs = Object.entries(loadState.tabs);
+  if (!loadState.active || !tabs.length) return;
+  const done = tabs.filter(([, st]) => st !== 'pending').length;
+  const secs = Math.round((Date.now() - loadState.started) / 1000);
+  const waiting = tabs.filter(([, st]) => st === 'pending').map(([n]) => n);
+  const txt = `Reading the sheet… ${done} of ${tabs.length} tabs · ${secs}s` + (secs >= 10 && waiting.length ? ` · waiting for ${waiting.join(', ')}` : '');
+  $('#last-updated').textContent = txt;
+  $('#hstamp').textContent = txt;
 }
 
 /* JSONP fetch from the sheet's gviz feed (needs "anyone with the link can view") */
@@ -1273,6 +1293,9 @@ async function loadData() {
   const btn = $('#refresh-btn');
   btn.classList.add('busy'); btn.disabled = true;
   try {
+    Object.assign(loadState, { tabs: {}, started: Date.now(), active: true });
+    clearInterval(loadState.timer);
+    loadState.timer = setInterval(showLoadProgress, 1000);
     const [d, s, i, tok, wd] = await Promise.all([
       sheetFetch('daily_summary'),
       sheetFetch('service_summary'),
@@ -1289,8 +1312,10 @@ async function loadData() {
     }
     showBanner(data
       ? `Couldn't reach the Google Sheet (${err.message}). Showing the copy fetched ${fmtStamp(data.fetchedAt)} instead.`
-      : `Couldn't reach the Google Sheet (${err.message}), and there's no saved copy on this device. ${IN_APPS_SCRIPT ? 'Check the web app is deployed to run as its owner' : 'Check the sheet is shared as "anyone with the link can view"'}, then refresh.`);
+      : `Couldn't reach the Google Sheet (${err.message}), and there's no saved copy on this device. ${IN_APPS_SCRIPT ? 'Check that the Google account the web app runs as (Deploy → Execute as) can open the queue sheet' : 'Check the sheet is shared as "anyone with the link can view"'}, then refresh.`);
   } finally {
+    loadState.active = false;
+    clearInterval(loadState.timer);
     btn.classList.remove('busy'); btn.disabled = false;
   }
   updateStamp();
