@@ -7,7 +7,8 @@ vendor/. Only Google (the web app itself, and Google Fonts) needs to be reachabl
 
 Run after every change to dashboard.html:
     python3 tools/build_apps_script.py
-then paste apps-script/Index.html into the Apps Script project (see apps-script/README.md).
+then commit apps-script/Index.html and merge into main: the Apps Script web app fetches it
+from there (see apps-script/README.md).
 """
 from pathlib import Path
 

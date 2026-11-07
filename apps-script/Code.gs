@@ -1,23 +1,79 @@
 /**
  * Pharmacy queue dashboard — Google Apps Script web app.
  *
- * Serves Index.html (the dashboard with every library built in) from script.google.com,
- * so it works on networks that block GitHub and public CDNs. The page asks getSheetRows()
- * for each tab of the queue sheet; the script reads it as you, so the sheet does not need
- * to be shared publicly.
+ * Serves the dashboard from script.google.com, so it works on networks that block GitHub and
+ * public CDNs. The page (apps-script/Index.html, every library built in) is fetched from the
+ * repository by Google's servers, not by the viewer's browser, so dashboard updates merged into
+ * main go live here by themselves. The page then asks getSheetRows() for each tab of the queue
+ * sheet; the script reads it as its owner, so the sheet need not be shared publicly.
  *
  * Setup: see apps-script/README.md.
  */
 
 const SHEET_ID = '1yIIm_lbopIggu0BjnBVmxtgTTT1F2pNP7YPSpSCJ1mc';
 const ALLOWED_SHEETS = ['daily_summary', 'service_summary', 'intraday', 'token_summary', 'wait_dist'];
+const PAGE_URL = 'https://raw.githubusercontent.com/JooSzeHao/pharmacy-dashboard/main/apps-script/Index.html';
+const CACHE_SECONDS = 600;   // re-check the repository at most every 10 minutes
+const CACHE_CHUNK = 30000;   // CacheService: 100 KB per value
+const PROP_CHUNK = 2800;     // PropertiesService: 9 KB per value (UTF-8, up to 3 bytes a character)
 
-function doGet() {
-  return HtmlService.createHtmlOutputFromFile('Index')
+function doGet(e) {
+  const fresh = e && e.parameter && e.parameter.refresh === '1';
+  return HtmlService.createHtmlOutput(getPageHtml_(fresh))
     .setTitle('Pharmacy Queue — HSIS Serdang')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1.0')
     // Allow embedding in Google Sites
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** The dashboard page: short-term cache → repository → last good copy kept in script properties. */
+function getPageHtml_(fresh) {
+  const cache = CacheService.getScriptCache();
+  if (!fresh) {
+    const hit = readChunks_(function (keys) { return cache.getAll(keys); }, 'page');
+    if (hit) return hit;
+  }
+  const props = PropertiesService.getScriptProperties();
+  try {
+    const res = UrlFetchApp.fetch(PAGE_URL, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) throw new Error('HTTP ' + res.getResponseCode());
+    const html = res.getContentText('UTF-8');
+    if (html.indexOf('<!DOCTYPE html>') !== 0) throw new Error('unexpected content');
+    cache.putAll(toChunks_('page', html, CACHE_CHUNK), CACHE_SECONDS);
+    // Keep a long-term copy for when the repository can't be reached; rewrite only on change
+    const digest = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, html, Utilities.Charset.UTF_8));
+    if (props.getProperty('page_digest') !== digest) {
+      const chunks = toChunks_('saved', html, PROP_CHUNK);
+      chunks.page_digest = digest;
+      props.setProperties(chunks);
+    }
+    return html;
+  } catch (err) {
+    const saved = readChunks_(function (keys) { return props.getProperties(); }, 'saved');
+    if (saved) return saved;
+    return '<!DOCTYPE html><html><body style="font-family:sans-serif;padding:32px">' +
+      '<h2>Dashboard unavailable</h2><p>The dashboard page could not be loaded (' + String(err.message) +
+      '). Try again in a few minutes.</p></body></html>';
+  }
+}
+
+function toChunks_(prefix, text, size) {
+  const out = {};
+  const n = Math.ceil(text.length / size);
+  for (let i = 0; i < n; i++) out[prefix + '_' + i] = text.substr(i * size, size);
+  out[prefix + '_n'] = String(n);
+  return out;
+}
+
+function readChunks_(getAll, prefix) {
+  const head = getAll([prefix + '_n']);
+  const n = Number(head && head[prefix + '_n']);
+  if (!n) return null;
+  const keys = [];
+  for (let i = 0; i < n; i++) keys.push(prefix + '_' + i);
+  const got = getAll(keys);
+  const parts = keys.map(function (k) { return got[k]; });
+  return parts.every(function (p) { return typeof p === 'string'; }) ? parts.join('') : null;
 }
 
 /**
