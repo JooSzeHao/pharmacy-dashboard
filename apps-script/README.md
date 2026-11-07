@@ -53,7 +53,7 @@ In Google Sites: **Insert → Embed → By URL**, paste the web app URL, choose 
 | What you see | Fix |
 |---|---|
 | Banner: "Couldn't reach the Google Sheet (…)" | Check the account in **Execute as** can open the sheet, and that the tab names are `daily_summary`, `service_summary`, `intraday`, `token_summary`, `wait_dist` |
-| "Sorry, unable to open the file at this time" | The deployment was removed or its access changed: redeploy (step 6) |
+| "Sorry, unable to open the file at this time" | The deployment was removed or its access changed: deploy again (setup step 2) |
 | Blank page inside Google Sites | Embed **By URL** (not "Embed code"), and make sure the deployment's access is **Anyone** |
 | Old version still showing | Open the web app URL with `?refresh=1` added; for a `Code.gs` change, deploy a **New version** (Manage deployments) |
 | Page says "Dashboard unavailable" | GitHub couldn't be reached from Google and no copy was saved yet: try again later, or check `apps-script/Index.html` is on `main` |
