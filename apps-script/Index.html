@@ -7,7 +7,8 @@
 <script>try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Archivo:wdth,wght@75..125,700..900&display=swap" rel="stylesheet">
+<!-- Fonts load without blocking the page: a firewall that silently drops Google Fonts must not stop the dashboard -->
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Archivo:wdth,wght@75..125,700..900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <script>/* vendor/chart.umd.min.js */
 /*!
  * Chart.js v4.4.0
@@ -2181,7 +2182,15 @@ window.addEventListener('afterprint', () => {
 // Google Sites embed mode
 if (location.hash === '#embed' || location.search.includes('embed=1')) document.body.classList.add('embed-mode');
 
-document.fonts.ready.then(() => { applyChartTheme(); loadData(); });
+// Start once the web fonts are in, but never wait more than 2 s for them (they may be blocked).
+// If they arrive later, redraw so the charts pick them up; otherwise system fonts are used.
+let started = false;
+const start = () => { if (started) return; started = true; applyChartTheme(); loadData(); };
+setTimeout(start, 2000);
+(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
+  if (!started) return start();
+  if (data) { applyChartTheme(); markAllStale(); renderCurrent(); }
+});
 </script>
 </body>
 </html>
