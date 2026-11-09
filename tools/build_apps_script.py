@@ -31,7 +31,10 @@ def inline(name):
     code = (ROOT / 'vendor' / name).read_text(encoding='utf-8')
     if '</script' in code.lower():
         raise SystemExit(f'vendor/{name} contains </script and cannot be inlined')
-    return f'<script>/* vendor/{name} */\n{code}\n</script>'
+    # Shadow any AMD/CommonJS loader the host page defines, so each UMD library takes its
+    # browser-global path (window.Chart, …) instead of registering as a module nobody imports.
+    return (f'<script>/* vendor/{name} */\n(function (define, module, exports, require) {{\n'
+            f'{code}\n}}).call(window);\n</script>')
 
 
 def main():
