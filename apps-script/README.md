@@ -42,7 +42,8 @@ In Google Sites: **Insert → Embed → By URL**, paste the web app URL, choose 
 
 ## Updating
 
-- **Dashboard changes:** run `python3 tools/build_apps_script.py`, commit `apps-script/Index.html`
+- **Dashboard changes:** run `python3 tools/build_apps_script.py` (needs Node.js: it runs esbuild to strip
+  comments and template literals, which a comment-stripping filter on the way to the hospital breaks), commit `apps-script/Index.html`
   with the change and merge into `main`. The web app picks it up within 10 minutes; add
   `?refresh=1` to the web app URL to load it straight away.
 - **`Code.gs` changes:** paste the new code into the project, **Save**, then
