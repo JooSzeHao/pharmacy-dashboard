@@ -1153,6 +1153,42 @@ function sheetFetch(name) {
   return trackLoad(name, p);
 }
 
+const TABS = ['daily_summary', 'service_summary', 'intraday', 'token_summary', 'wait_dist'];
+const OPTIONAL_TABS = new Set(['token_summary', 'wait_dist']);
+let batchUnsupported = false;      // set when the deployed Code.gs predates getAllSheets()
+
+function gasCall(fn, arg) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('no answer after 90 s')), 90000);
+    google.script.run
+      .withSuccessHandler(v => { clearTimeout(timer); resolve(v); })
+      .withFailureHandler(e => { clearTimeout(timer); reject(new Error((e && e.message) || 'sheet could not be read')); })[fn](arg);
+  });
+}
+
+/* All tabs as arrays of row objects. In Apps Script: one call (cached server-side for 5 minutes;
+   fresh = true skips that cache). Elsewhere, or with an older Code.gs: one request per tab. */
+async function fetchAllSheets(fresh) {
+  // google.script.run only offers the functions of the deployed Code.gs
+  if (IN_APPS_SCRIPT && !batchUnsupported && typeof google.script.run.getAllSheets === 'function') {
+    try {
+      const res = JSON.parse(await trackLoad('sheet', gasCall('getAllSheets', !!fresh)));
+      const tabs = TABS.map(name => {
+        const t = res.tabs[name];
+        if (!t) { if (OPTIONAL_TABS.has(name)) return []; throw new Error(`${name}: no tab named ${name}`); }
+        return t.rows.map(r => { const o = {}; t.head.forEach((h, i) => { o[h] = r[i]; }); return o; });
+      });
+      return { tabs, fetchedAt: res.fetchedAt || Date.now() };
+    } catch (e) {
+      if (!/function not found|is not a function|getAllSheets/i.test(e.message)) throw e;
+      batchUnsupported = true;
+      loadState.tabs = {};
+    }
+  }
+  const tabs = await Promise.all(TABS.map(n => OPTIONAL_TABS.has(n) ? sheetFetch(n).catch(() => []) : sheetFetch(n)));
+  return { tabs, fetchedAt: Date.now() };
+}
+
 /* Loading progress, shown in the header while the sheet is read, so a slow or failing tab is visible */
 const loadState = { tabs: {}, started: 0, timer: null, active: false };
 function trackLoad(name, p) {
@@ -1167,7 +1203,8 @@ function showLoadProgress() {
   const done = tabs.filter(([, st]) => st !== 'pending').length;
   const secs = Math.round((Date.now() - loadState.started) / 1000);
   const waiting = tabs.filter(([, st]) => st === 'pending').map(([n]) => n);
-  const txt = `Reading the sheet… ${done} of ${tabs.length} tabs · ${secs}s` + (secs >= 10 && waiting.length ? ` · waiting for ${waiting.join(', ')}` : '');
+  const count = tabs.length > 1 ? ` ${done} of ${tabs.length} tabs ·` : '';
+  const txt = `${data ? 'Updating' : 'Reading the sheet'}…${count} ${secs}s` + (tabs.length > 1 && secs >= 10 && waiting.length ? ` · waiting for ${waiting.join(', ')}` : '');
   $('#last-updated').textContent = txt;
   $('#hstamp').textContent = txt;
 }
@@ -1267,21 +1304,19 @@ function normalise(d, s, i, tok, wd) {
   return { daily, service, intraday, token, wd: wdRows };
 }
 
-async function loadData() {
+async function loadData(fresh = false) {
   const btn = $('#refresh-btn');
   btn.classList.add('busy'); btn.disabled = true;
+  unchanged = false;
   try {
     Object.assign(loadState, { tabs: {}, started: Date.now(), active: true });
     clearInterval(loadState.timer);
     loadState.timer = setInterval(showLoadProgress, 1000);
-    const [d, s, i, tok, wd] = await Promise.all([
-      sheetFetch('daily_summary'),
-      sheetFetch('service_summary'),
-      sheetFetch('intraday'),
-      sheetFetch('token_summary').catch(() => []),
-      sheetFetch('wait_dist').catch(() => []),
-    ]);
-    data = Object.assign(normalise(d, s, i, tok, wd), { fetchedAt: Date.now(), cached: false });
+    const got = await fetchAllSheets(fresh);
+    const next = normalise(...got.tabs);
+    // Same figures as the copy already on screen (e.g. the saved copy shown at start): just update the time
+    unchanged = !!data && JSON.stringify(next) === JSON.stringify(stripMeta(data));
+    data = Object.assign(next, { fetchedAt: got.fetchedAt, cached: false });
     try { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); } catch (e) {}
     hideBanner();
   } catch (err) {
@@ -1298,9 +1333,22 @@ async function loadData() {
   }
   updateStamp();
   if (!data) { renderNoData(); return; }
+  if (unchanged) { updateSideInfo(); return; }
   initControls();
   markAllStale();
   renderCurrent();
+}
+let unchanged = false;
+const stripMeta = d => { const { fetchedAt, cached, ...rest } = d; return rest; };
+
+/* Show the copy saved on this device straight away, then refresh it in the background */
+function showSavedCopy() {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null');
+    if (!c || !c.daily || !c.daily.length) return;
+    data = Object.assign(c, { cached: true });
+    initControls(); markAllStale(); renderCurrent();
+  } catch (e) {}
 }
 
 function showBanner(msg) { const b = $('#error-banner'); b.textContent = msg; b.classList.add('visible'); }
@@ -2041,7 +2089,7 @@ function renderCurrent() {
 }
 function renderNoData() {
   $('#panel-0').innerHTML = emptyCard('Data unavailable', 'The Google Sheet could not be reached and nothing is saved on this device yet.', false)
-    + '<div style="text-align:center;margin-top:12px"><button class="toggle-btn" onclick="loadData()">↻ Try again</button></div>';
+    + '<div style="text-align:center;margin-top:12px"><button class="toggle-btn" onclick="loadData(true)">↻ Try again</button></div>';
 }
 
 function switchTab(i) {
@@ -2086,7 +2134,7 @@ document.querySelectorAll('.side-btn.tab').forEach(b => b.addEventListener('clic
 document.querySelectorAll('#presets .preset-btn').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.preset)));
 $('#from-date').addEventListener('change', e => { if (e.target.value) setRange(e.target.value, state.to, null); });
 $('#to-date').addEventListener('change', e => { if (e.target.value) setRange(state.from, e.target.value, null); });
-$('#refresh-btn').addEventListener('click', loadData);
+$('#refresh-btn').addEventListener('click', () => loadData(true));
 $('#print-btn').addEventListener('click', () => window.print());
 $('#side-reset').addEventListener('click', resetFilters);
 $('#side-source').href = `https://docs.google.com/spreadsheets/d/${SHEET_ID}`;
@@ -2159,20 +2207,12 @@ window.addEventListener('afterprint', () => {
 // Google Sites embed mode
 if (location.hash === '#embed' || location.search.includes('embed=1')) document.body.classList.add('embed-mode');
 
-// Start once the web fonts are in, but never wait more than 2 s for them (they may be blocked).
-// If they arrive later, redraw so the charts pick them up; otherwise system fonts are used.
-let started = false;
-const start = () => {
-  if (started) return;
-  started = true;
-  try { applyChartTheme(); } catch (e) { window.__pageError('chart theme: ' + e.message); }
-  loadData();
-};
-setTimeout(start, 2000);
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
-  if (!started) return start();
-  if (data) { applyChartTheme(); markAllStale(); renderCurrent(); }
-});
+// Start at once: the saved copy (if any) shows immediately and the sheet is read in parallel.
+// Web fonts may be slow or blocked, so don't wait for them; when they arrive, charts redraw with them.
+try { applyChartTheme(); } catch (e) { window.__pageError('chart theme: ' + e.message); }
+showSavedCopy();
+loadData();
+if (document.fonts) document.fonts.ready.then(() => { if (data) { applyChartTheme(); markAllStale(); renderCurrent(); } });
 </script>
 </body>
 </html>
