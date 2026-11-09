@@ -9,7 +9,10 @@ served from `script.google.com`:
   blocked, system fonts are used and everything still works).
 - **Updates go live by themselves.** `Code.gs` fetches `apps-script/Index.html` from this
   repository's `main` branch on Google's servers (not through the hospital network), keeps it
-  for 10 minutes, and keeps the last good copy in case GitHub can't be reached.
+  for an hour, and keeps the last good copy in case GitHub can't be reached.
+- **Fast to open.** The page reads every tab in one call (`getAllSheets`), which Google keeps for
+  5 minutes, and each browser shows the copy it saw last straight away while it refreshes. The
+  **Refresh data** button skips the 5-minute copy and reads the sheet again.
 - **The sheet can stay private.** The script reads the queue sheet as its owner, so the sheet
   no longer has to be shared as "anyone with the link can view".
 
@@ -17,7 +20,7 @@ served from `script.google.com`:
 
 | File | What it is |
 |---|---|
-| `Code.gs` | The whole Apps Script project: serves the page (`doGet`) and reads one tab of the sheet for it (`getSheetRows`) |
+| `Code.gs` | The whole Apps Script project: serves the page (`doGet`) and reads the sheet for it (`getAllSheets`; `getSheetRows` for older pages) |
 | `Index.html` | The dashboard with every library inlined, built from `../dashboard.html` by `tools/build_apps_script.py`. Committed so `Code.gs` can fetch it — don't edit it by hand |
 
 ## First-time setup
@@ -44,7 +47,7 @@ In Google Sites: **Insert → Embed → By URL**, paste the web app URL, choose 
 
 - **Dashboard changes:** run `python3 tools/build_apps_script.py` (needs Node.js: it runs esbuild to strip
   comments and template literals, which a comment-stripping filter on the way to the hospital breaks), commit `apps-script/Index.html`
-  with the change and merge into `main`. The web app picks it up within 10 minutes; add
+  with the change and merge into `main`. The web app picks it up within the hour; add
   `?refresh=1` to the web app URL to load it straight away.
 - **`Code.gs` changes:** paste the new code into the project, **Save**, then
   **Deploy → Manage deployments** → pencil icon → **Version: New version** → **Deploy**. The URL stays the same.
