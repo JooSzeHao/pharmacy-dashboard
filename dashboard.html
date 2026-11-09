@@ -4,7 +4,20 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pharmacy Queue — HSIS Serdang</title>
-<script>try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}</script>
+<script>
+/* Show start-up errors on the page instead of failing silently ("Fetching data…" forever) */
+window.__pageError = function (msg) {
+  var show = function () {
+    var b = document.getElementById('error-banner'), s = document.getElementById('last-updated');
+    if (b) { b.textContent = 'The dashboard hit an error: ' + msg + ' — please send a screenshot of this message.'; b.classList.add('visible'); }
+    if (s && /Fetching/.test(s.textContent)) s.textContent = 'Start-up error';
+  };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', show) : show();
+};
+window.addEventListener('error', function (e) { window.__pageError((e.message || 'script error') + (e.lineno ? ' (line ' + e.lineno + ')' : '')); });
+window.addEventListener('unhandledrejection', function (e) { window.__pageError(String(e.reason && e.reason.message || e.reason)); });
+try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Fonts load without blocking the page: a firewall that silently drops Google Fonts must not stop the dashboard -->
@@ -2149,7 +2162,12 @@ if (location.hash === '#embed' || location.search.includes('embed=1')) document.
 // Start once the web fonts are in, but never wait more than 2 s for them (they may be blocked).
 // If they arrive later, redraw so the charts pick them up; otherwise system fonts are used.
 let started = false;
-const start = () => { if (started) return; started = true; applyChartTheme(); loadData(); };
+const start = () => {
+  if (started) return;
+  started = true;
+  try { applyChartTheme(); } catch (e) { window.__pageError('chart theme: ' + e.message); }
+  loadData();
+};
 setTimeout(start, 2000);
 (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => {
   if (!started) return start();
