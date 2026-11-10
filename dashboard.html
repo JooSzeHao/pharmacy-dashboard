@@ -301,7 +301,7 @@ select option { background: var(--card-solid); color: var(--text); }
 .hero-stat .v { font-family: 'Archivo', var(--font); font-size: 58px; font-weight: 800; font-stretch: 112%; line-height: 1; letter-spacing: -1.5px; }
 .hero-stat .v small { font-size: 24px; font-weight: 800; margin-left: 2px; }
 .hero-stat .l { font-size: 12.5px; color: var(--muted); margin-top: 4px; }
-.hero-stat .gap { font-size: 11.5px; color: var(--text); margin-top: 3px; max-width: 190px; line-height: 1.35; }
+.hero-stat .gap { font-size: 11.5px; color: var(--text); margin-top: 3px; max-width: 210px; line-height: 1.35; text-wrap: balance; }
 .hero-stat .gap b { font-weight: 600; }
 
 /* ── Scope tags: what each card follows ── */
@@ -553,6 +553,16 @@ body[data-tab="1"] .filter-bar { display: none; }
 morph-icon { display: inline-flex; line-height: 0; flex-shrink: 0; }
 .st-chip morph-icon svg { width: 13px; height: 13px; }
 
+/* Alignment: cards in a row share a height; let the chart (or gauge) take the spare space
+   instead of leaving a gap under it */
+.bento-3 > .card, .row > .card { display: flex; flex-direction: column; }
+.card > .chart-wrap { flex: 1 0 auto; }
+.card > .gauge-wrap { flex: 1 0 auto; justify-content: center; }
+.row-2.wide-first { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+@media (max-width: 900px) { .row-2.wide-first { grid-template-columns: minmax(0, 1fr); } }
+/* Heatmap: label column as narrow as its labels, months share the rest */
+.heatmap-table thead th:first-child, .heatmap-table tbody th { width: 1%; padding-right: 16px; }
+
 /* Hero: neutral (non-status) stats share the size but not the colour */
 .hero-stat.neutral .v small { font-size: 22px; }
 .hero-stat .hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
@@ -663,10 +673,10 @@ body::before {
 :root[data-theme="dark"] .side { background: rgba(9,7,26,.96); border: 1px solid rgba(255,255,255,.07); box-shadow: 0 18px 44px rgba(0,0,0,.45); }
 
 /* Tables: let the glass through, keep the sticky header readable */
-.table-wrap { border-color: var(--glass-edge); background: rgba(255,255,255,.55); }
-:root[data-theme="dark"] .table-wrap { background: rgba(27,24,64,.6); }
+.table-wrap { border-color: var(--glass-edge); background: var(--card-solid); }
+
 tbody td { background: transparent; }
-tbody td:first-child, thead th { background: var(--glass-strong); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+tbody td:first-child, thead th { background: var(--card-solid); }
 .prog-bar { background-color: rgba(255,255,255,.25); }
 :root[data-theme="dark"] .prog-bar { background-color: rgba(255,255,255,.03); }
 .toggle-btn, .preset-btn, .view-btn, .btn-dl, select, input[type="date"] { background-color: var(--glass-strong); border-color: var(--glass-edge); }
@@ -1594,7 +1604,7 @@ function renderOverview() {
       actions: pngBtn('c-trend', 'within-30min-trend'), body: chartBox('c-trend', 300) + targetNote(`${TARGET}% target`) })}</div>
     <div class="row row-2">
       ${card({ title: 'Waiting time', scope: 'range', meta: 'Average and median, minutes', actions: pngBtn('c-wait', 'wait-trend'), body: chartBox('c-wait', 270) + targetNote(`${TARGET_WAIT_MIN}-min limit`) })}
-      ${card({ title: 'Bil item', scope: 'range', meta: 'Items dispensed a day', actions: pngBtn('c-item', 'bil-item-trend'), body: chartBox('c-item', 270) })}
+      ${card({ title: 'Bil item', scope: 'range', meta: 'Items dispensed a day', actions: pngBtn('c-item', 'bil-item-trend'), body: chartBox('c-item', 270) + '<div class="chart-note">Days without an item count are left blank</div>' })}
     </div>
     <div class="row row-1">${card({ title: 'Daily breakdown', scope: 'month', meta: 'One row per day · click a row to open it in Daily operations',
       actions: monthSel + csvBtn('t-breakdown', 'daily-breakdown'), body: `<div class="table-wrap" id="bd-wrap"></div>` })}</div>`;
@@ -1892,14 +1902,14 @@ function renderServices() {
       <td class="num">${fmt1(st.avgWait)}</td><td class="num">${fmt1(st.medWait)}</td></tr>`; }).join('');
   const all = svcStats(rows);
   const summary = `<div class="table-wrap"><table id="t-svc"><thead><tr><th>Service</th><th class="num">Total Rx</th><th class="num">Share</th>
-      <th class="num">Within 30 min</th><th class="num">Avg wait (min)</th><th class="num">Median wait (min)</th></tr></thead>
+      <th class="num">Within 30 min</th><th class="num">Avg wait<span class="th-sub">min</span></th><th class="num">Median wait<span class="th-sub">min</span></th></tr></thead>
     <tbody>${tableRows}<tr><td>Selected services</td><td class="num">${fmtN(all.rx)}</td><td class="num">100%</td><td class="num">${statusBadge(all.pct)}</td>
       <td class="num">${fmt1(all.avgWait)}</td><td class="num">${fmt1(mean(sel.filter(s => S[s.key]).map(s => S[s.key].medWait)))}</td></tr></tbody></table></div>`;
 
   el.innerHTML = scorecards + `
     <div class="row row-1">${card({ title: 'Within 30 min, by service', scope: 'svc', meta: `Daily share of patients seen within ${TARGET_WAIT_MIN} min`,
       actions: pngBtn('c-svc', 'service-pct-chart'), body: chartBox('c-svc', 300) + targetNote(`${TARGET}% target`) })}</div>
-    <div class="row row-2">
+    <div class="row row-2 wide-first">
       ${card({ title: 'Service summary', scope: 'svc', meta: 'Weighted by patients', actions: csvBtn('t-svc', 'service-summary'), body: summary })}
       ${card({ title: 'Patient mix', scope: 'svc', meta: 'Share of Rx by service', body: chartBox('c-mix', 250) })}
     </div>
@@ -1911,16 +1921,18 @@ function renderServices() {
       ${card({ title: 'Bil item × wait', scope: 'all', meta: 'Days by items dispensed and within-30 %', actions: pngBtn('c-hm-item', 'item-heatmap'), body: chartBox('c-hm-item', 320) })}
     </div>`;
 
-  // Per-service trend
+  // Per-service trend (labels on each line's latest value only: labels on every point collide)
+  const lastIndex = arr => { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i; return -1; };
   const labels = dates.map(fmtDay);
   const allPct = rows.map(r => r.within_30min_pct);
   mk(2, 'c-svc', {
     type: 'line',
     data: { labels, datasets: [...sel.map(s => lineSeries(s.label, dates.map(d => byKey[s.key][d] ? byKey[s.key][d].within_30min_pct : null), CATEGORY_COLORS[s.key], null,
         { borderWidth: 2.2, pointRadius: manyPoints(dates.length) ? 0 : 3.5 })), targetLine(labels)] },
-    options: baseOpts({ scales: { y: yPct(pctFloor(allPct)), x: xDays() } },
+    options: baseOpts({ layout: { padding: { top: 8, right: 44, bottom: 2, left: 4 } }, scales: { y: yPct(pctFloor(allPct)), x: xDays() } },
       { legend: legendTopRight(), tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { label: c => ` ${c.dataset.label}: ${fmt1(c.parsed.y)}%` } },
-        datalabels: { ...DL.linePct, display: c => showLabels && dates.length <= 14 && !c.dataset.isTarget } })
+        datalabels: { ...DL.linePct, anchor: 'center', align: 'right', offset: 6, clip: false,
+          display: c => showLabels && !c.dataset.isTarget && c.dataIndex === lastIndex(c.dataset.data) } })
   });
 
   // Doughnut
