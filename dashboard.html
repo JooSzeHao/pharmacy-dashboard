@@ -1776,7 +1776,7 @@ function renderDaily() {
         : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}</div>
     <div class="row row-2">
       ${card({ title: 'Busier days and the 30-minute target', scope: 'all',
-        meta: `Every day in the sheet, grouped by how high the queue peaked · dashed = ${TARGET}% target`, actions: pngBtn('c-qvw', 'queue-vs-kpi'),
+        meta: `All days, grouped by peak queue · dashed = ${TARGET}% target`, actions: pngBtn('c-qvw', 'queue-vs-kpi'),
         body: '<div class="insight" id="qvw-insight"></div>' + chartBox('c-qvw', 280) + '<div class="chart-note" id="qvw-day"></div>' })}
       ${card({ title: 'Waiting time distribution', scope: 'day', meta: 'Patients by minutes waited', actions: wd ? csvBtn('t-dist', 'wait-distribution') : '', body: wdBody })}
     </div>
