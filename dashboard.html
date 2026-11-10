@@ -563,6 +563,29 @@ morph-icon { display: inline-flex; line-height: 0; flex-shrink: 0; }
 /* Heatmap: label column as narrow as its labels, months share the rest */
 .heatmap-table thead th:first-child, .heatmap-table tbody th { width: 1%; padding-right: 16px; }
 
+/* Queue and waiting time through the day: strips on one timeline */
+.takeaway { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 12px; }
+.takeaway .neutral-chip b { color: var(--text); font-weight: 600; }
+.readout { font-size: 13px; margin: 0 0 6px 132px; min-height: 22px; color: var(--muted); }
+.readout b { color: var(--text); font-weight: 600; }
+.readout .t { display: inline-block; padding: 1px 9px; border-radius: 999px; background: var(--pill-on-bg); color: var(--pill-on-fg); font-weight: 500; margin-right: 8px; }
+.strips { touch-action: pan-y; }
+.strip { display: grid; grid-template-columns: 132px minmax(0, 1fr); }
+.strip + .strip { border-top: 1px solid var(--line); }
+.strip-label { padding: 12px 10px 0 0; }
+.strip-label b { display: block; font-size: 13px; font-weight: 500; }
+.strip-label span { display: block; font-size: 11.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+.strip-label i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.insight { font-size: 13.5px; line-height: 1.5; margin: -2px 0 12px; }
+.insight b { font-weight: 600; }
+@media (max-width: 640px) {
+  .readout { margin-left: 0; }
+  .strip { grid-template-columns: minmax(0, 1fr); }
+  .strip-label { padding: 10px 0 0; }
+  .strip-label span { display: inline; margin-left: 6px; }
+  .strip .chart-wrap { height: 150px !important; }
+}
+
 /* Hero: neutral (non-status) stats share the size but not the colour */
 .hero-stat.neutral .v small { font-size: 22px; }
 .hero-stat .hint { font-size: 11px; color: var(--muted); margin-top: 8px; }
@@ -1740,13 +1763,21 @@ function renderDaily() {
     : `<div class="chart-empty" style="height:210px">${data.wd.length ? `No waiting-time distribution for ${fmtDayY(date)}.` : 'No waiting-time distribution in the sheet yet (needs the wait_dist tab).'}</div>`;
 
   el.innerHTML = picker + hero + `
-    <div class="row row-1">${card({ title: 'Wait time and queue through the day', scope: 'day', meta: `30-minute slots · ${fmtDayY(date)}`,
-      actions: pngBtn('c-intra', 'intraday-chart'),
-      body: intr.length ? chartBox('c-intra', 320) + targetNote(`${TARGET_WAIT_MIN}-min limit · shaded: lunch break`) : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}</div>
+    <div class="row row-1">${card({ title: 'Queue and waiting time through the day', scope: 'day',
+      meta: `${fmtDayY(date)} · 30-minute slots · hover a slot to compare all three`,
+      actions: intr.length ? '<button class="btn-dl" id="png-intra">PNG</button>' : '',
+      body: intr.length ? `<div class="takeaway" id="intra-takeaway"></div><div class="readout" id="intra-readout"></div>
+        <div class="strips" id="intra-strips">
+          <div class="strip"><div class="strip-label"><b><i style="background:var(--pj)"></i>Live patients</b><span>peak waiting in each slot</span></div>${chartBox('c-queue', 150)}</div>
+          <div class="strip"><div class="strip-label"><b><i style="background:var(--mb)"></i>Average wait</b><span>minutes · dashed = ${TARGET_WAIT_MIN}-min limit</span></div>${chartBox('c-wait-day', 150)}</div>
+          <div class="strip"><div class="strip-label"><b><i style="background:var(--comb)"></i>Within 30 min</b><span>share so far today · dashed = ${TARGET}% target</span></div>${chartBox('c-cum', 175)}</div>
+        </div>
+        <div class="chart-note">Hatched: lunch break · grey band: slots where the average wait was over ${TARGET_WAIT_MIN} min</div>`
+        : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}</div>
     <div class="row row-2">
-      ${card({ title: 'Within 30 min, running total', scope: 'day', meta: 'Cumulative share through the day',
-        actions: pngBtn('c-cum', 'intraday-cum-pct'),
-        body: intr.length ? chartBox('c-cum', 270) + targetNote(`${TARGET}% target`) : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}
+      ${card({ title: 'Does a longer queue mean a longer wait?', scope: 'all',
+        meta: `Every 30-minute slot in the sheet · ${fmtDay(date)} highlighted`, actions: pngBtn('c-qvw', 'queue-vs-wait'),
+        body: '<div class="insight" id="qvw-insight"></div>' + chartBox('c-qvw', 300) + targetNote(`${TARGET_WAIT_MIN}-min limit`) })}
       ${card({ title: 'Waiting time distribution', scope: 'day', meta: 'Patients by minutes waited', actions: wd ? csvBtn('t-dist', 'wait-distribution') : '', body: wdBody })}
     </div>
     <div class="row row-1">${card({ title: 'Token summary', scope: 'day', meta: 'Wait and serve times by queue token', actions: csvBtn('t-token', 'token-summary'), body: tokenTable(date) })}</div>`;
@@ -1772,38 +1803,17 @@ function renderDaily() {
         const xs = x0 + (lunch[0] - f) / (l - f) * (x1 - x0), xe = x0 + (lunch[1] - f) / (l - f) * (x1 - x0);
         ctx.save();
         ctx.globalAlpha = .55; ctx.fillStyle = hatch; ctx.fillRect(xs, a.top, xe - xs, a.bottom - a.top);
-        ctx.globalAlpha = 1; ctx.fillStyle = THEME.muted; ctx.font = "500 11px 'Outfit', sans-serif"; ctx.textAlign = 'center';
-        ctx.fillText(lunch[2], (xs + xe) / 2, a.top + 14);
+        // Label it once: stacked strips set plugins.lunchShade.label = false on all but the top one
+        if ((chart.options.plugins.lunchShade || {}).label !== false) {
+          ctx.globalAlpha = 1; ctx.fillStyle = THEME.muted; ctx.font = "500 11px 'Outfit', sans-serif"; ctx.textAlign = 'center';
+          ctx.fillText(lunch[2], (xs + xe) / 2, a.top + 14);
+        }
         ctx.restore();
       }
     };
-    const wait = INTRADAY_BUCKETS.map(b => byB[b] ? byB[b].avg_wait_served_min : null);
-    const queue = INTRADAY_BUCKETS.map(b => byB[b] ? byB[b].live_patients_peak : null);
-    const cI = document.getElementById('c-intra');
-    mk(1, 'c-intra', {
-      type: 'bar', plugins: [lunchShade],
-      data: { labels: INTRADAY_BUCKETS, datasets: [
-        lineSeries('Average wait (min)', wait, THEME.mb, cI, { type: 'line', yAxisID: 'y', order: 0 }),
-        { label: 'Queue (peak patients)', data: queue, backgroundColor: THEME.pjSoft, borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false,
-          maxBarThickness: 22, yAxisID: 'y1', order: 2, pointStyle: 'rectRounded' },
-        Object.assign(targetLine(INTRADAY_BUCKETS, TARGET_WAIT_MIN, `${TARGET_WAIT_MIN}-min limit`), { yAxisID: 'y', order: 1 }) ] },
-      options: baseOpts({ scales: {
-          x: { grid: { display: false }, border: { display: false }, ticks: { ...TICKS, maxRotation: 0, autoSkip: true, maxTicksLimit: 11 } },
-          y: { position: 'left', min: 0, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6, callback: v => v + 'm' } },
-          y1: { position: 'right', min: 0, grid: { display: false }, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6 } } } },
-        { legend: legendTopRight(), tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget },
-          datalabels: { ...DL.line, display: c => showLabels && c.datasetIndex === 0, formatter: v => v != null ? Math.round(v) : '' } })
-    });
-
-    const cum = INTRADAY_BUCKETS.map(b => byB[b] ? byB[b].cum_within_30min_pct : null);
-    const cC = document.getElementById('c-cum');
-    mk(1, 'c-cum', {
-      type: 'line', plugins: [lunchShade],
-      data: { labels: INTRADAY_BUCKETS, datasets: [lineSeries('Cumulative within 30 min', cum, THEME.mb, cC, { pointRadius: 3 }), targetLine(INTRADAY_BUCKETS)] },
-      options: baseOpts({ scales: { y: yPct(pctFloor(cum)), x: { grid: { display: false }, border: { display: false }, ticks: { ...TICKS, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } } } },
-        { legend: { display: false }, tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { label: c => ` ${fmt1(c.parsed.y)}% within 30 min so far` } } })
-    });
+    renderIntradayStrips(byB, lunchShade, date);
   }
+  renderQueueVsWait(date);
 
   if (wd) {
     const vals = WD_BUCKETS.map(([k]) => wd[k]);
@@ -1820,6 +1830,147 @@ function renderDaily() {
           datalabels: { ...DL.barGroup, formatter: (v, c) => v > 0 ? wd[WD_BUCKETS[c.dataIndex][0] + 'p'].toFixed(0) + '%' : '' } })
     });
   }
+}
+
+/* Queue and waiting time through the day: three strips on one timeline, read top to bottom.
+   Identical x scales (same slots, same offset) and a fixed y-axis width keep every slot in one column. */
+function renderIntradayStrips(byB, lunchShade, date) {
+  const B = INTRADAY_BUCKETS, n = B.length;
+  const Q = B.map(b => byB[b] ? byB[b].live_patients_peak : null);
+  const W = B.map(b => byB[b] ? byB[b].avg_wait_served_min : null);
+  const C = B.map(b => byB[b] ? byB[b].cum_within_30min_pct : null);
+  const has = v => v != null && isFinite(v);
+  const slotEnd = i => B[i + 1] || (() => { const [h, m] = B[i].split(':').map(Number), t = h * 60 + m + 30; return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; })();
+  const argmax = a => a.reduce((best, v, i) => has(v) && (best < 0 || v > a[best]) ? i : best, -1);
+  const pk = argmax(Q), pw = argmax(W);
+  const lastC = (() => { for (let i = n - 1; i >= 0; i--) if (has(C[i])) return i; return -1; })();
+  const firstC = C.findIndex(has);
+  const over = W.map((w, i) => has(w) && w > TARGET_WAIT_MIN);
+
+  // Takeaway chips
+  const runs = []; over.forEach((o, i) => { if (!o) return; if (runs.length && runs[runs.length - 1][1] === i - 1) runs[runs.length - 1][1] = i; else runs.push([i, i]); });
+  const chips = [];
+  if (pk >= 0) chips.push(`Queue peaked at <b>${fmtN(Q[pk])}</b> at <b>${B[pk]}</b>`);
+  if (pw >= 0) chips.push(`Average wait peaked at <b>${fmt1(W[pw])} min</b> at <b>${B[pw]}</b>`);
+  chips.push(runs.length ? `Over ${TARGET_WAIT_MIN} min <b>${runs.map(([a, b]) => `${B[a]}–${slotEnd(b)}`).join(', ')}</b>` : `Average wait stayed within ${TARGET_WAIT_MIN} min all day`);
+  if (lastC >= 0) chips.push(firstC >= 0 && firstC !== lastC ? `Within 30 min went from <b>${fmt1(C[firstC])}%</b> to <b>${fmt1(C[lastC])}%</b>` : `Within 30 min: <b>${fmt1(C[lastC])}%</b>`);
+  $('#intra-takeaway').innerHTML = chips.map(c => `<span class="neutral-chip">${c}</span>`).join('');
+
+  let hover = pk >= 0 ? pk : 0;
+  const AXIS_W = 40, fixAxis = { afterFit: sc => { sc.width = AXIS_W; } };
+  const xOpts = show => ({ offset: true, grid: { display: false }, border: { display: false },
+    ticks: { ...TICKS, display: show, maxRotation: 0, autoSkip: false, callback: (v, i) => i % (innerWidth < 640 ? 4 : 2) === 0 ? B[i] : '' } });
+  const crosshair = { id: 'crosshair', afterDatasetsDraw(ch) {
+    const { ctx, chartArea: a, scales: { x } } = ch, px = x.getPixelForValue(hover);
+    ctx.save(); ctx.strokeStyle = THEME.text; ctx.globalAlpha = .35; ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke(); ctx.restore(); } };
+  const overBand = { id: 'overBand', beforeDatasetsDraw(ch) {
+    const { ctx, chartArea: a, scales: { x } } = ch, step = x.getPixelForValue(1) - x.getPixelForValue(0);
+    ctx.save(); ctx.fillStyle = rgba(THEME.dark ? '#FFFFFF' : '#1C1C1E', THEME.dark ? .08 : .07);
+    runs.forEach(([s, e]) => ctx.fillRect(x.getPixelForValue(s) - step / 2, a.top, (e - s + 1) * step, a.bottom - a.top));
+    ctx.fillStyle = THEME.muted; ctx.font = "500 10.5px 'Outfit', sans-serif"; ctx.textAlign = 'center';
+    runs.forEach(([s, e]) => ctx.fillText(`over ${TARGET_WAIT_MIN} min`, (x.getPixelForValue(s) + x.getPixelForValue(e)) / 2, a.bottom - 6));
+    ctx.restore(); } };
+  const opts = (scales, labels, lunchLabel = false) => baseOpts({ layout: { padding: { top: 20, right: 26, bottom: 0, left: 0 } }, events: [], scales },
+    { legend: { display: false }, tooltip: { enabled: false }, datalabels: labels, lunchShade: { label: lunchLabel } });
+  const lbl = { anchor: 'center', align: 'top', offset: 6, color: THEME.text, font: { size: 10.5, weight: '600' } };
+
+  const queue = mk(1, 'c-queue', {
+    type: 'bar', plugins: [lunchShade, crosshair],
+    data: { labels: B, datasets: [{ data: Q, borderRadius: { topLeft: 5, topRight: 5 }, borderSkipped: false, maxBarThickness: 30,
+      backgroundColor: Q.map((_, i) => i === pk ? THEME.pj : THEME.pjSoft) }] },
+    options: opts({ x: xOpts(false), y: { min: 0, grace: '12%', grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 4 }, ...fixAxis } },
+      { display: c => showLabels && has(c.dataset.data[c.dataIndex]), anchor: 'end', align: 'top', offset: 1, color: THEME.text, font: { size: 10.5, weight: '600' }, formatter: v => fmtN(v) }, true)
+  });
+  const cW = document.getElementById('c-wait-day');
+  mk(1, 'c-wait-day', {
+    type: 'line', plugins: [lunchShade, overBand, crosshair],
+    data: { labels: B, datasets: [
+      { data: W, borderColor: THEME.mb, borderWidth: 2.5, tension: .35, spanGaps: false, fill: true, backgroundColor: areaGradient(cW, THEME.mb, 150),
+        pointRadius: 3, pointBackgroundColor: THEME.cardSolid, pointBorderColor: THEME.mb, pointBorderWidth: 2 },
+      targetLine(B, TARGET_WAIT_MIN, `${TARGET_WAIT_MIN}-min limit`) ] },
+    options: opts({ x: xOpts(false), y: { min: 0, suggestedMax: TARGET_WAIT_MIN + 10, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 4, callback: v => v + 'm' }, ...fixAxis } },
+      { ...lbl, display: c => showLabels && c.datasetIndex === 0 && has(W[c.dataIndex]) && (over[c.dataIndex] || c.dataIndex === hover), formatter: v => Math.round(v) + 'm' })
+  });
+  mk(1, 'c-cum', {
+    type: 'line', plugins: [lunchShade, crosshair],
+    data: { labels: B, datasets: [
+      { data: C, borderColor: THEME.comb, borderWidth: 2.5, tension: .3, spanGaps: false, pointRadius: 0, pointHoverRadius: 0 },
+      targetLine(B) ] },
+    options: opts({ x: xOpts(true), y: { min: pctFloor(C), max: 100, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 3, callback: v => v + '%' }, ...fixAxis } },
+      { ...lbl, display: c => showLabels && c.datasetIndex === 0 && has(C[c.dataIndex]) && (c.dataIndex === lastC || c.dataIndex === hover), formatter: v => fmt1(v) + '%' })
+  });
+
+  // One readout for the hovered slot (defaults to the queue peak); crosshair through all three strips
+  const strips = Object.values(charts[1]).filter(c => ['c-queue', 'c-wait-day', 'c-cum'].includes(c.canvas.id));
+  const setHover = i => {
+    hover = i;
+    const v = (a, f) => has(a[i]) ? f(a[i]) : '—';
+    $('#intra-readout').innerHTML = `<span class="t">${B[i]}–${slotEnd(i)}</span><b>${v(Q, fmtN)}</b> live patients · average wait <b>${v(W, x => fmt1(x) + ' min')}</b> · <b>${v(C, x => fmt1(x) + '%')}</b> within 30 min so far`;
+    strips.forEach(c => c.update('none'));
+  };
+  setHover(hover);
+  const pick = clientX => {
+    const x = queue.scales.x, px = clientX - queue.canvas.getBoundingClientRect().left;
+    const i = Math.round((px - x.getPixelForValue(0)) / (x.getPixelForValue(1) - x.getPixelForValue(0)));
+    if (i >= 0 && i < n && i !== hover) setHover(i);
+  };
+  const box = $('#intra-strips');
+  box.addEventListener('mousemove', e => pick(e.clientX));
+  box.addEventListener('touchstart', e => pick(e.touches[0].clientX), { passive: true });
+  box.addEventListener('touchmove', e => pick(e.touches[0].clientX), { passive: true });
+
+  // PNG: the three strips stacked into one image
+  $('#png-intra').addEventListener('click', () => {
+    const cs = strips.map(c => c.canvas), w = Math.max(...cs.map(c => c.width)), h = cs.reduce((a, c) => a + c.height, 0);
+    const out = document.createElement('canvas'); out.width = w; out.height = h;
+    const x = out.getContext('2d'); x.fillStyle = THEME.cardSolid; x.fillRect(0, 0, w, h);
+    let y = 0; cs.forEach(c => { x.drawImage(c, 0, y); y += c.height; });
+    const a = document.createElement('a'); a.href = out.toDataURL('image/png'); a.download = `queue-and-wait_${date}.png`; a.click();
+  });
+}
+
+/* Does a longer queue mean a longer wait? Every slot in the sheet; the selected day highlighted.
+   Tipping point: the smallest queue size at and above which ≥ 75% of slots ran over the limit. */
+function renderQueueVsWait(date) {
+  const slots = data.intraday.filter(r => r.live_patients_peak != null && r.avg_wait_served_min != null && isFinite(r.live_patients_peak) && isFinite(r.avg_wait_served_min));
+  const pts = slots.map(r => ({ x: r.live_patients_peak, y: r.avg_wait_served_min, t: r.time_bucket, d: r.date }));
+  const day = pts.filter(p => p.d === date), rest = pts.filter(p => p.d !== date);
+  const lim = TARGET_WAIT_MIN, ins = $('#qvw-insight');
+  renderQueueVsWait.tip = null;
+  if (pts.length < 10) { ins.textContent = 'Not enough intraday data yet to compare queue length and waiting time.'; }
+  else {
+    let tip = null; const maxQ = Math.max(...pts.map(p => p.x));
+    for (let q = 1; q <= maxQ; q++) { const s = pts.filter(p => p.x >= q); if (s.length >= 10 && s.filter(p => p.y > lim).length / s.length >= .75) { tip = q; break; } }
+    if (tip == null) {
+      const n = pts.filter(p => p.y > lim).length;
+      ins.innerHTML = `No queue length reliably pushed the average wait past ${lim} min: it went over in <b>${fmtN(n)} of ${fmtN(pts.length)}</b> slots, spread across queue sizes.`;
+    } else {
+      const a = pts.filter(p => p.x >= tip), b = pts.filter(p => p.x < tip);
+      ins.innerHTML = `When <b>${tip}+ patients</b> were waiting, the average wait went over ${lim} min in <b>${fmtN(a.filter(p => p.y > lim).length)} of ${fmtN(a.length)}</b> slots. With fewer, it did in <b>${fmtN(b.filter(p => p.y > lim).length)} of ${fmtN(b.length)}</b>.`;
+    }
+    renderQueueVsWait.tip = tip;
+  }
+  const tip = renderQueueVsWait.tip, hatch = hatchPattern();
+  const xMax = Math.max(10, ...pts.map(p => p.x)), yMax = Math.max(lim + 10, ...pts.map(p => p.y));
+  const peakT = new Set(day.slice().sort((a, b) => b.x - a.x).slice(0, 4).map(p => p.t));
+  mk(1, 'c-qvw', {
+    type: 'scatter',
+    plugins: [{ id: 'tipZone', beforeDatasetsDraw(ch) {
+      if (tip == null) return; const { ctx, chartArea: a, scales: { x } } = ch, px = x.getPixelForValue(tip);
+      ctx.save(); ctx.globalAlpha = .45; ctx.fillStyle = hatch; ctx.fillRect(px, a.top, a.right - px, a.bottom - a.top);
+      ctx.globalAlpha = 1; ctx.fillStyle = THEME.muted; ctx.font = "500 11px 'Outfit', sans-serif"; ctx.fillText(`${tip}+ patients`, px + 6, a.top + 12); ctx.restore(); } }],
+    data: { datasets: [
+      { label: 'Other days', data: rest, backgroundColor: rgba(THEME.mb, THEME.dark ? .35 : .18), pointRadius: 3.5, borderWidth: 0 },
+      { label: fmtDay(date), data: day, backgroundColor: THEME.pj, borderColor: THEME.text, borderWidth: 1, pointRadius: 5.5 },
+      { ...targetLine([0, 1], lim, `${lim}-min limit`), type: 'line', data: [{ x: 0, y: lim }, { x: Math.ceil(xMax * 1.05), y: lim }] } ] },
+    options: baseOpts({ interaction: { mode: 'nearest', intersect: true }, scales: {
+        x: { type: 'linear', min: 0, suggestedMax: Math.ceil(xMax * 1.05), grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 7 }, title: { display: true, text: 'Live patients in the slot', color: THEME.muted, font: { size: 11 } } },
+        y: { min: 0, suggestedMax: Math.ceil(yMax / 10) * 10, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6, callback: v => v + 'm' }, title: { display: true, text: 'Average wait', color: THEME.muted, font: { size: 11 } } } } },
+      { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxHeight: 7, padding: 14, filter: (i, d) => !d.datasets[i.datasetIndex].isTarget } },
+        tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { title: it => { const p = it[0].raw; return `${fmtDayY(p.d)} · ${p.t}`; }, label: c => ` ${fmtN(c.raw.x)} patients · ${fmt1(c.raw.y)} min average wait` } },
+        datalabels: { display: c => showLabels && c.datasetIndex === 1 && peakT.has(day[c.dataIndex].t), align: 'right', offset: 4, color: THEME.text, font: { size: 10, weight: '600' }, formatter: (v, c) => day[c.dataIndex].t } })
+  });
 }
 
 function tokenTable(date) {
