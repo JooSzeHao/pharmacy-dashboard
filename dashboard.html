@@ -1012,7 +1012,8 @@ function baseOpts(extra = {}, pluginsExtra = {}) {
     maintainAspectRatio: false,
     interaction: { mode:'index', intersect:false },
     animation: { duration: 500, easing: 'easeOutQuart' },
-    layout: { padding: { top: 8, right: 6, bottom: 2, left: 4 } },
+    // Room for data labels above a 100% point and beside the first/last point (they were cut off at the edges)
+    layout: { padding: { top: 22, right: 26, bottom: 2, left: 4 } },
     plugins: {
       legend: { position: 'top', labels: { usePointStyle: true, pointStyleWidth: 10, boxHeight: 7, padding: 16,
                 font: { family:"'Outfit', sans-serif", size: 11, weight: '600' } } },
@@ -1483,6 +1484,11 @@ function mk(tab, key, cfg) {
 }
 function destroyTab(tab) { Object.values(charts[tab]).forEach(c => c.destroy()); charts[tab] = {}; }
 const manyPoints = n => n > 45;
+/* Line labels: below the point at a dip (lower than both neighbours), above it otherwise,
+   so a label never sits on the line itself */
+const isDip = c => { const d = c.dataset.data, i = c.dataIndex, v = d[i], p = d[i - 1], n = d[i + 1];
+  return v != null && (p == null || v < p) && (n == null || v < n) && (p != null || n != null); };
+const dipAwareLabels = { anchor: 'center', align: c => isDip(c) ? 'bottom' : 'top', offset: 6 };
 const fewForLabels = n => n <= 31;
 
 const xDays = () => ({ grid: { display: false }, border: { display: false }, ticks: { ...TICKS, maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } });
@@ -1636,7 +1642,7 @@ function renderOverview() {
     data: { labels, datasets: [lineSeries('Within 30 min %', pct, THEME.mb, cT), targetLine(labels)] },
     options: baseOpts({ scales: { y: yPct(pctFloor(pct)), x: xDays() } },
       { legend: { display: false }, tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { title: it => fmtDayY(rows[it[0].dataIndex].date) + ' · ' + dowOf(rows[it[0].dataIndex].date) } },
-        datalabels: { ...DL.linePct, display: c => showLabels && fewForLabels(rows.length) && !c.dataset.isTarget } })
+        datalabels: { ...DL.linePct, ...dipAwareLabels, display: c => showLabels && fewForLabels(rows.length) && !c.dataset.isTarget } })
   });
 
   // Waiting time
@@ -1929,7 +1935,7 @@ function renderServices() {
     type: 'line',
     data: { labels, datasets: [...sel.map(s => lineSeries(s.label, dates.map(d => byKey[s.key][d] ? byKey[s.key][d].within_30min_pct : null), CATEGORY_COLORS[s.key], null,
         { borderWidth: 2.2, pointRadius: manyPoints(dates.length) ? 0 : 3.5 })), targetLine(labels)] },
-    options: baseOpts({ layout: { padding: { top: 8, right: 44, bottom: 2, left: 4 } }, scales: { y: yPct(pctFloor(allPct)), x: xDays() } },
+    options: baseOpts({ layout: { padding: { top: 22, right: 44, bottom: 2, left: 4 } }, scales: { y: yPct(pctFloor(allPct)), x: xDays() } },
       { legend: legendTopRight(), tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { label: c => ` ${c.dataset.label}: ${fmt1(c.parsed.y)}%` } },
         datalabels: { ...DL.linePct, anchor: 'center', align: 'right', offset: 6, clip: false,
           display: c => showLabels && !c.dataset.isTarget && c.dataIndex === lastIndex(c.dataset.data) } })
