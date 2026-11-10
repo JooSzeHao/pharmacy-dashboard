@@ -541,7 +541,7 @@ input[type="date"] {
   font-size: 12.5px; color: var(--text); background: var(--card-solid);
   font-family: var(--font); font-weight: 500; cursor: pointer;
 }
-input[type="date"]:focus { outline: none; border-color: var(--acc); box-shadow: 0 0 0 2px var(--hover); }
+input[type="date"]:focus { outline: 2px solid var(--acc); outline-offset: 2px; border-color: var(--acc); }
 .range-info { font-size: 12px; color: var(--muted); margin-left: auto; white-space: nowrap; padding-right: 4px; }
 
 /* The date range doesn't apply on Daily operations: hide it there */
@@ -601,6 +601,10 @@ morph-icon { display: inline-flex; line-height: 0; flex-shrink: 0; }
 :root[data-theme="dark"] .side-btn.active { background: var(--pill-on-bg); color: var(--pill-on-fg); }
 /* Intraday strips take keyboard focus (← → step through slots) */
 .strips:focus-visible { outline: 2px solid var(--acc); outline-offset: 4px; border-radius: 12px; }
+
+/* Narrow cards (three per row): keep the action button top-right; the title wraps beside it */
+.row-3 .card-header { flex-wrap: nowrap; }
+.row-3 .card-title-wrap { min-width: 0; }
 
 /* Hero: neutral (non-status) stats share the size but not the colour */
 .hero-stat.neutral .v small { font-size: 22px; }
@@ -1478,8 +1482,8 @@ function card({ title, scope, meta = '', actions = '', body, cls = '' }) {
       ${actions ? `<div class="card-actions">${actions}</div>` : ''}</div>${body}</div>`;
 }
 const chartBox = (id, h = 300) => `<div class="chart-wrap" style="height:${h}px"><canvas id="${id}"></canvas></div>`;
-const pngBtn = (key, name) => `<button class="btn-dl" data-png="${key}" data-name="${name}">PNG</button>`;
-const csvBtn = (table, name) => `<button class="btn-dl" data-csv="${table}" data-name="${name}">CSV</button>`;
+const pngBtn = (key, name) => `<button class="btn-dl" data-png="${key}" data-name="${name}" title="Save this chart as a PNG image">Save image</button>`;
+const csvBtn = (table, name) => `<button class="btn-dl" data-csv="${table}" data-name="${name}" title="Download this table as a CSV file (opens in Excel)">Download table</button>`;
 const targetNote = txt => `<div class="target-note">${txt}</div>`;
 function emptyCard(reason, line, reset = true) {
   return `<div class="card empty-card"><div class="empty-ico">∅</div><div class="card-title">${reason}</div>
@@ -1515,9 +1519,20 @@ function progPill(label, right, pct, fill, fg, outline = false) {
 const svcIcon = (key, cls = 'svc-ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${key}"/></svg>`;
 
 /* Chart registry per tab; charts on hidden tabs are never built */
+/* Screen readers can't read a canvas: describe each chart from its card's title, subtitle and summary */
+function describeChart(el) {
+  const card = el.closest('.card'); if (!card) return;
+  const text = sel => [...card.querySelectorAll(sel)].map(n => n.textContent.trim().replace(/\s+/g, ' ')).filter(Boolean).join('; ');
+  const strip = el.closest('.strip');
+  const parts = [text('.card-title'), strip ? [...strip.querySelector('.strip-label').children].map(n => n.textContent.trim()).join(', ') : '',
+    text('.card-meta'), text('.insight') || text('.takeaway .neutral-chip'), text('.target-note, .chart-note')];
+  el.setAttribute('role', 'img');
+  el.setAttribute('aria-label', parts.filter(Boolean).join('. '));
+}
 function mk(tab, key, cfg) {
   const el = document.getElementById(key);
   if (!el) return null;
+  describeChart(el);
   if (printing) cfg.options = Object.assign({}, cfg.options, { animation: false });
   return (charts[tab][key] = new Chart(el, cfg));
 }
@@ -1781,7 +1796,7 @@ function renderDaily() {
   el.innerHTML = picker + hero + `
     <div class="row row-1">${card({ title: 'Queue and waiting time through the day', scope: 'day',
       meta: `${fmtDayY(date)} · 30-minute slots · hover a slot to compare all three`,
-      actions: intr.length ? '<button class="btn-dl" id="png-intra">PNG</button>' : '',
+      actions: intr.length ? '<button class="btn-dl" id="png-intra" title="Save the three strips as one PNG image">Save image</button>' : '',
       body: intr.length ? `<div class="takeaway" id="intra-takeaway"></div><div class="readout" id="intra-readout" aria-live="polite"></div>
         <div class="strips" id="intra-strips" tabindex="0" role="group" aria-label="Queue and waiting time by 30-minute slot. Use the left and right arrow keys to move between slots." aria-describedby="intra-readout">
           <div class="strip"><div class="strip-label"><b><i style="background:var(--pj)"></i>Live patients</b><span>peak waiting in each slot</span></div>${chartBox('c-queue', 150)}</div>
