@@ -1776,8 +1776,8 @@ function renderDaily() {
         : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}</div>
     <div class="row row-2">
       ${card({ title: 'Does a longer queue mean a longer wait?', scope: 'all',
-        meta: `Every 30-minute slot in the sheet · ${fmtDay(date)} highlighted`, actions: pngBtn('c-qvw', 'queue-vs-wait'),
-        body: '<div class="insight" id="qvw-insight"></div>' + chartBox('c-qvw', 300) + targetNote(`${TARGET_WAIT_MIN}-min limit`) })}
+        meta: `Every 30-minute slot in the sheet, grouped by how many patients were waiting`, actions: pngBtn('c-qvw', 'queue-vs-wait'),
+        body: '<div class="insight" id="qvw-insight"></div>' + chartBox('c-qvw', 280) + '<div class="chart-note" id="qvw-day"></div>' })}
       ${card({ title: 'Waiting time distribution', scope: 'day', meta: 'Patients by minutes waited', actions: wd ? csvBtn('t-dist', 'wait-distribution') : '', body: wdBody })}
     </div>
     <div class="row row-1">${card({ title: 'Token summary', scope: 'day', meta: 'Wait and serve times by queue token', actions: csvBtn('t-token', 'token-summary'), body: tokenTable(date) })}</div>`;
@@ -1930,46 +1930,63 @@ function renderIntradayStrips(byB, lunchShade, date) {
   });
 }
 
-/* Does a longer queue mean a longer wait? Every slot in the sheet; the selected day highlighted.
+/* Does a longer queue mean a longer wait? Thousands of slots overplot as dots, so slots are grouped by
+   queue size and each bar shows how often the average wait went over the limit in that group.
    Tipping point: the smallest queue size at and above which ≥ 75% of slots ran over the limit. */
 function renderQueueVsWait(date) {
-  const slots = data.intraday.filter(r => r.live_patients_peak != null && r.avg_wait_served_min != null && isFinite(r.live_patients_peak) && isFinite(r.avg_wait_served_min));
-  const pts = slots.map(r => ({ x: r.live_patients_peak, y: r.avg_wait_served_min, t: r.time_bucket, d: r.date }));
-  const day = pts.filter(p => p.d === date), rest = pts.filter(p => p.d !== date);
-  const lim = TARGET_WAIT_MIN, ins = $('#qvw-insight');
-  renderQueueVsWait.tip = null;
-  if (pts.length < 10) { ins.textContent = 'Not enough intraday data yet to compare queue length and waiting time.'; }
-  else {
-    let tip = null; const maxQ = Math.max(...pts.map(p => p.x));
-    for (let q = 1; q <= maxQ; q++) { const s = pts.filter(p => p.x >= q); if (s.length >= 10 && s.filter(p => p.y > lim).length / s.length >= .75) { tip = q; break; } }
-    if (tip == null) {
-      const n = pts.filter(p => p.y > lim).length;
-      ins.innerHTML = `No queue length reliably pushed the average wait past ${lim} min: it went over in <b>${fmtN(n)} of ${fmtN(pts.length)}</b> slots, spread across queue sizes.`;
-    } else {
-      const a = pts.filter(p => p.x >= tip), b = pts.filter(p => p.x < tip);
-      ins.innerHTML = `When <b>${tip}+ patients</b> were waiting, the average wait went over ${lim} min in <b>${fmtN(a.filter(p => p.y > lim).length)} of ${fmtN(a.length)}</b> slots. With fewer, it did in <b>${fmtN(b.filter(p => p.y > lim).length)} of ${fmtN(b.length)}</b>.`;
-    }
-    renderQueueVsWait.tip = tip;
+  const lim = TARGET_WAIT_MIN, ins = $('#qvw-insight'), note = $('#qvw-day');
+  const pts = data.intraday.filter(r => r.live_patients_peak != null && r.avg_wait_served_min != null && isFinite(r.live_patients_peak) && isFinite(r.avg_wait_served_min))
+    .map(r => ({ x: r.live_patients_peak, y: r.avg_wait_served_min, t: r.time_bucket, d: r.date }));
+  if (pts.length < 10) { ins.textContent = 'Not enough intraday data yet to compare queue length and waiting time.'; note.textContent = ''; return; }
+
+  // Groups of a round width; thin groups at the top end merge into one "N+" group
+  const maxQ = Math.max(...pts.map(p => p.x));
+  const step = [5, 10, 20, 25, 50, 100].find(st => maxQ / st <= 8) || 100;   // about 8 groups at most
+  let bands = [];
+  for (let lo = 0; lo <= maxQ; lo += step) bands.push({ lo, hi: lo + step, pts: pts.filter(p => p.x >= lo && p.x < lo + step) });
+  while (bands.length > 1 && bands[bands.length - 1].pts.length < 8) {
+    const last = bands.pop(), prev = bands[bands.length - 1];
+    prev.pts = prev.pts.concat(last.pts); prev.hi = Infinity;
   }
-  const tip = renderQueueVsWait.tip, hatch = hatchPattern();
-  const xMax = Math.max(10, ...pts.map(p => p.x)), yMax = Math.max(lim + 10, ...pts.map(p => p.y));
-  const peakT = new Set(day.slice().sort((a, b) => b.x - a.x).slice(0, 4).map(p => p.t));
+  bands = bands.filter(b => b.pts.length);
+  const median = a => { const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+  bands.forEach(b => { b.n = b.pts.length; b.over = b.pts.filter(p => p.y > lim).length; b.pct = b.over / b.n * 100; b.med = median(b.pts.map(p => p.y));
+    b.label = b.hi === Infinity ? `${b.lo}+` : `${b.lo}–${b.hi}`; });
+
+  let tip = null;
+  for (const b of bands) { const s = pts.filter(p => p.x >= b.lo); if (s.length >= 10 && s.filter(p => p.y > lim).length / s.length >= .75) { tip = b.lo; break; } }
+  if (tip == null) {
+    const n = pts.filter(p => p.y > lim).length;
+    ins.innerHTML = `No queue length reliably pushed the average wait past ${lim} min: it went over in <b>${fmtN(n)} of ${fmtN(pts.length)}</b> slots, spread across queue sizes.`;
+  } else {
+    const a = pts.filter(p => p.x >= tip), b = pts.filter(p => p.x < tip);
+    ins.innerHTML = `When <b>${tip}+ patients</b> were waiting, the average wait went over ${lim} min in <b>${fmtN(a.filter(p => p.y > lim).length)} of ${fmtN(a.length)}</b> slots (${Math.round(a.filter(p => p.y > lim).length / a.length * 100)}%). With fewer, it did in <b>${fmtN(b.filter(p => p.y > lim).length)} of ${fmtN(b.length)}</b> (${Math.round(b.filter(p => p.y > lim).length / Math.max(1, b.length) * 100)}%).`;
+  }
+
+  // The selected day's busiest slot, and the group it falls in
+  const day = pts.filter(p => p.d === date);
+  const busiest = day.reduce((m, p) => !m || p.x > m.x ? p : m, null);
+  const dayBand = busiest ? bands.findIndex(b => busiest.x >= b.lo && busiest.x < b.hi) : -1;
+  note.innerHTML = busiest && dayBand >= 0
+    ? `Outlined bar: <b>${fmtDay(date)}</b>'s busiest slot, ${busiest.t} with <b>${fmtN(busiest.x)} patients</b> (average wait ${fmt1(busiest.y)} min). In that group, ${Math.round(bands[dayBand].pct)}% of slots went over ${lim} min.`
+    : `No intraday data for ${fmtDay(date)}.`;
+
   mk(1, 'c-qvw', {
-    type: 'scatter',
-    plugins: [{ id: 'tipZone', beforeDatasetsDraw(ch) {
-      if (tip == null) return; const { ctx, chartArea: a, scales: { x } } = ch, px = x.getPixelForValue(tip);
-      ctx.save(); ctx.globalAlpha = .45; ctx.fillStyle = hatch; ctx.fillRect(px, a.top, a.right - px, a.bottom - a.top);
-      ctx.globalAlpha = 1; ctx.fillStyle = THEME.muted; ctx.font = "500 11px 'Outfit', sans-serif"; ctx.fillText(`${tip}+ patients`, px + 6, a.top + 12); ctx.restore(); } }],
-    data: { datasets: [
-      { label: 'Other days', data: rest, backgroundColor: rgba(THEME.mb, THEME.dark ? .35 : .18), pointRadius: 3.5, borderWidth: 0 },
-      { label: fmtDay(date), data: day, backgroundColor: THEME.pj, borderColor: THEME.text, borderWidth: 1, pointRadius: 5.5 },
-      { ...targetLine([0, 1], lim, `${lim}-min limit`), type: 'line', data: [{ x: 0, y: lim }, { x: Math.ceil(xMax * 1.05), y: lim }] } ] },
-    options: baseOpts({ interaction: { mode: 'nearest', intersect: true }, scales: {
-        x: { type: 'linear', min: 0, suggestedMax: Math.ceil(xMax * 1.05), grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 7 }, title: { display: true, text: 'Live patients in the slot', color: THEME.muted, font: { size: 11 } } },
-        y: { min: 0, suggestedMax: Math.ceil(yMax / 10) * 10, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6, callback: v => v + 'm' }, title: { display: true, text: 'Average wait', color: THEME.muted, font: { size: 11 } } } } },
-      { legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxHeight: 7, padding: 14, filter: (i, d) => !d.datasets[i.datasetIndex].isTarget } },
-        tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { title: it => { const p = it[0].raw; return `${fmtDayY(p.d)} · ${p.t}`; }, label: c => ` ${fmtN(c.raw.x)} patients · ${fmt1(c.raw.y)} min average wait` } },
-        datalabels: { display: c => showLabels && c.datasetIndex === 1 && peakT.has(day[c.dataIndex].t), align: 'right', offset: 4, color: THEME.text, font: { size: 10, weight: '600' }, formatter: (v, c) => day[c.dataIndex].t } })
+    type: 'bar',
+    data: { labels: bands.map(b => innerWidth < 640 ? b.label : [b.label, fmtN(b.n)]), datasets: [{
+      data: bands.map(b => b.pct),
+      backgroundColor: bands.map(b => tip != null && b.lo >= tip ? THEME.mb : THEME.mbSoft),
+      borderColor: bands.map((_, i) => i === dayBand ? THEME.pj : 'transparent'), borderWidth: bands.map((_, i) => i === dayBand ? 3 : 0),
+      borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, maxBarThickness: 46, minBarLength: 2 }] },
+    options: baseOpts({ scales: {
+        x: { grid: { display: false }, border: { display: false }, ticks: { ...TICKS, font: { size: 10.5 }, autoSkip: false, maxRotation: innerWidth < 640 ? 50 : 0, minRotation: innerWidth < 640 ? 50 : 0 },
+             title: { display: true, text: innerWidth < 640 ? 'Live patients in the slot' : 'Live patients in the slot · number of slots', color: THEME.muted, font: { size: 11 } } },
+        y: { min: 0, max: 100, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6, callback: v => v + '%' },
+             title: { display: true, text: `Slots over ${lim} min`, color: THEME.muted, font: { size: 11 } } } } },
+      { legend: { display: false },
+        tooltip: { ...TOOLTIP, callbacks: { title: it => `${bands[it[0].dataIndex].label} patients`,
+          label: c => { const b = bands[c.dataIndex]; return [` ${fmtN(b.over)} of ${fmtN(b.n)} slots over ${lim} min (${Math.round(b.pct)}%)`, ` Typical (median) wait: ${fmt1(b.med)} min`]; } } },
+        datalabels: { display: () => showLabels, anchor: 'end', align: 'top', offset: 2, color: THEME.text, font: { size: 10.5, weight: '600' }, formatter: v => Math.round(v) + '%' } })
   });
 }
 
