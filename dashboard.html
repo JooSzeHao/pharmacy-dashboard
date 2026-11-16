@@ -48,8 +48,8 @@ try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.data
 :root {
   --font:        'Outfit', system-ui, sans-serif;
   --bg:          #ECEBE6;
-  --bg-img:      radial-gradient(circle at 100% 100%, rgba(242,194,48,.20), transparent 42%), linear-gradient(160deg, #EDEDEB 0%, #F1EEE4 100%);
-  --card:        rgba(255,255,255,.86);
+  --bg-img:      none;
+  --card:        #FFFFFF;
   --card-solid:  #FFFFFF;
   --line:        rgba(28,28,30,.08);
   --text:        #1C1C1E;
@@ -75,32 +75,36 @@ try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.data
   --on-pj:       #1C1C1E;
   --comb:        #9A9AA0;
   --comb-soft:   #D4D4D8;
+  --comb-line:   #6E6E74;
+  --non:         #E4E2DA;
+  --raised:      #F4F2EC;
+  --on-comb:     #1C1C1E;
   --hatch:       rgba(28,28,30,.28);
   --grid:        rgba(28,28,30,.07);
   --target:      rgba(28,28,30,.45);
   --tip-bg:      #1C1C1E;
   --tip-fg:      #FFFFFF;
   --ok:          #3E6B41;  --ok-dim:   #E3ECDD;   /* status text ≥ 5:1 on its chip */
-  --warn:        #8A5A00;  --warn-dim: #F8EDC9;
-  --bad:         #9C3F2A;  --bad-dim:  #F3DFD6;
+  --warn:        #8A6400;  --warn-dim: #F8EDC9;
+  --bad:         #9E4430;  --bad-dim:  #F3DFD6;
   --stripe:      rgba(28,28,30,.025);
   --hover:       rgba(242,194,48,.14);
-  --shadow:      0 1px 2px rgba(28,28,30,.04), 0 10px 28px rgba(28,28,30,.06);
+  --shadow:      0 1px 2px rgba(28,28,30,.04), 0 8px 24px rgba(28,28,30,.05);
   /* Service colours — same hues as the service logos, tuned to the warm light theme */
-  --svc-ump:     #B8473A;   /* red → terracotta (white labels ≥ 4.5:1) */
+  --svc-ump:     #C44A39;   /* red → terracotta */
   --svc-locker:  #5A6372;   /* slate */
-  --svc-esyms:   #26766C;   /* teal */
+  --svc-esyms:   #287D73;   /* teal */
   --svc-idtf:    #7462C4;   /* violet */
   --svc-pandu:   #C98A2A;   /* amber → ochre */
   --svc-on:      #FFFFFF;   /* glyph / label colour on a service fill */
-  --r-card:      22px;
+  --r-card:      18px;
   --r-in:        14px;
   --side-w:      64px;
 }
 /* ── Dark (Corelytics-inspired) ── */
 :root[data-theme="dark"] {
   --bg:          #100D29;
-  --bg-img:      radial-gradient(circle at 85% 0%, rgba(124,131,253,.16), transparent 45%), radial-gradient(circle at 0% 100%, rgba(232,121,198,.08), transparent 40%), linear-gradient(180deg, #110E2B 0%, #0E0B24 100%);
+  --bg-img:      none;
   --card:        #1B1840;
   --card-solid:  #1B1840;
   --line:        rgba(255,255,255,.08);
@@ -127,6 +131,10 @@ try{if(localStorage.getItem('dash-theme')==='dark')document.documentElement.data
   --on-pj:       #1C1C1E;
   --comb:        #E879C6;
   --comb-soft:   #7A3F6C;
+  --comb-line:   #E879C6;
+  --non:         rgba(255,255,255,.09);
+  --raised:      #231F52;
+  --on-comb:     #1C1C1E;
   --hatch:       rgba(255,255,255,.20);
   --grid:        rgba(255,255,255,.07);
   --target:      rgba(236,235,250,.45);
@@ -664,81 +672,97 @@ td .dow { color: var(--muted); font-weight: 400; margin-right: 4px; }
   .card-actions .btn-dl, .card-actions select { display: none !important; }
 }
 
+
 /* ════════════════════════════════════════════════════════════════════════════
-   Glass layer — light frost on cards, clear chart cards, dark side panel
+   Unslop pass (DESIGN-SPEC section 10): the same theme with quiet chrome.
+   No glass, glow or colour washes. Controls are small rounded segments, not pills.
+   Status is a dot and a word. The 95% target is a ruled tick marked 95.
    ════════════════════════════════════════════════════════════════════════════ */
-:root {
-  --glass:        rgba(255,255,255,.74);
-  --glass-strong: rgba(255,255,255,.88);
-  --glass-edge:   rgba(255,255,255,.75);
-  --glass-hi:     inset 0 1px 0 rgba(255,255,255,.85), inset 0 -1px 0 rgba(255,255,255,.25);
-  --glass-blur:   blur(14px) saturate(130%);
-  --shadow:       0 1px 2px rgba(28,28,30,.04), 0 18px 40px rgba(28,28,30,.08);
-  --card-solid:   #FFFFFF;
-  --blob-1: rgba(242,194,48,.45);  --blob-2: rgba(46,140,128,.22);
-  --blob-3: rgba(116,98,196,.22);  --blob-4: rgba(201,80,63,.16);
-}
-:root[data-theme="dark"] {
-  --glass:        rgba(30,27,72,.78);
-  --glass-strong: rgba(30,27,72,.92);
-  --glass-edge:   rgba(255,255,255,.12);
-  --glass-hi:     inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.03);
-  --shadow:       0 18px 44px rgba(0,0,0,.35);
-  --blob-1: rgba(124,131,253,.30); --blob-2: rgba(232,121,198,.18);
-  --blob-3: rgba(95,211,195,.12);  --blob-4: rgba(245,198,106,.10);
-}
+:root[data-theme="dark"] { --shadow: none; }
+:root[data-theme="dark"] .card, :root[data-theme="dark"] .svc-card { border-color: rgba(255,255,255,.08); }
+.side { border-radius: 18px; }
+.side-btn, .side-logo .mark { border-radius: 10px; }
+.side-box { border-radius: 10px; }
+.side-reset { border-radius: 8px; }
+@media (max-width: 640px) { .side { overflow: visible; } }
 
-/* Colour fields behind the glass — without them there's nothing to frost */
-body::before {
-  content: ''; position: fixed; inset: -10vmax; z-index: -1; pointer-events: none;
-  background:
-    radial-gradient(28vmax 28vmax at 18% 12%, var(--blob-1), transparent 70%),
-    radial-gradient(30vmax 30vmax at 88% 22%, var(--blob-3), transparent 70%),
-    radial-gradient(34vmax 34vmax at 70% 85%, var(--blob-2), transparent 70%),
-    radial-gradient(26vmax 26vmax at 10% 78%, var(--blob-4), transparent 70%);
-  filter: blur(10px);
+.filter-bar { border-radius: 14px; backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--card); padding: 8px 12px; gap: 10px; }
+.tab-filter { border-radius: 14px; }
+.toggle-btn, .preset-btn, .view-btn, .btn-dl {
+  border-radius: 8px; border-color: transparent; background: transparent; color: var(--muted);
+  transition: background-color .15s cubic-bezier(.22,1,.36,1), color .15s cubic-bezier(.22,1,.36,1);
 }
+.toggle-btn:hover, .preset-btn:hover, .view-btn:hover, .btn-dl:hover { color: var(--text); background: var(--raised); border-color: transparent; }
+.toggle-btn.active, .preset-btn.active, .view-btn.active { background: var(--pill-on-bg); color: var(--pill-on-fg); border-color: var(--pill-on-bg); }
+select, input[type="date"] { border-radius: 8px; background: var(--card); }
+.fg:has(.preset-btn), .fg:has(.day-step) { background: var(--raised); border-radius: 10px; padding: 2px; gap: 2px; }
+.fg:has(.day-step) .fl { padding: 0 6px; }
 
-.card, .svc-card, .filter-bar, .tab-filter {
-  background: var(--glass);
-  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-edge);
-  box-shadow: var(--shadow), var(--glass-hi);
+/* Scope: quiet text next to the title, not a pill */
+.scope-tag, .scope-tag.ytd, .scope-tag.all { border: 0; background: none; padding: 0; border-radius: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
+.scope-tag::before { content: '·'; margin-right: 6px; }
+
+/* Status: a dot (or the morphing icon) and a word */
+.st-chip { background: none !important; padding: 0; margin-top: 10px; font-size: 13px; gap: 6px; }
+.badge { background: none !important; padding: 0; font-size: 12.5px; font-weight: 500; gap: 6px; }
+.badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.kpi-pill { background: none !important; padding: 0; font-size: 12px; }
+.neutral-chip { border: 0; padding: 0; }
+.takeaway { gap: 6px 18px; }
+
+/* Tables read like a ledger: no zebra, hairlines, totals on a raised row */
+.table-wrap { border-radius: 12px; }
+tbody tr:nth-child(even) td { background-image: none; }
+tbody tr:hover td { background-image: linear-gradient(var(--raised), var(--raised)); }
+tbody tr:last-child td { font-weight: 500; background-image: linear-gradient(var(--raised), var(--raised)); }
+.heatmap-cell { border-radius: 6px; }
+.heatmap-table tbody tr:last-child td { background-image: none; font-weight: 500; }
+
+/* Service dock: a surface change on hover, no lift */
+.dock { border-radius: 18px; }
+.dock-item { border-radius: 12px; }
+.dock-item:hover { transform: none; }
+.dock-all { border-radius: 8px; }
+
+/* Service scorecards: the number, its split and its changes */
+.svc-card { border-radius: var(--r-card); }
+.svc-total { font-family: 'Archivo', var(--font); font-stretch: 110%; font-weight: 600; font-size: 28px; letter-spacing: -.02em; }
+.rank-card { border-color: transparent; }
+:root[data-theme="dark"] .rank-card { border-color: rgba(255,255,255,.10); }
+
+/* Signature: thin bars with the 95% target as a ruled tick */
+.tbar { position: relative; height: 6px; border-radius: 3px; background: var(--raised); }
+.tbar > i { position: absolute; inset: 0 auto 0 0; border-radius: 3px; background: var(--mb); }
+.tbar > b { position: absolute; top: -4px; bottom: -4px; width: 1px; background: var(--text); }
+.tbar.lbl > b::after { content: '95'; position: absolute; top: -15px; left: 50%; transform: translateX(-50%); font-size: 10px; line-height: 12px; color: var(--muted); font-weight: 400; }
+
+@media print { .table-wrap, tbody td:first-child, thead th { background: #fff !important; } }
+
+/* ── Page head, KPI row, main row (spec section 10 layout) ── */
+.page-head { margin: 4px 4px 20px; }
+.page-head h1 { font-size: 36px; font-weight: 400; line-height: 1.15; letter-spacing: -.02em; }
+.page-head h1 span { color: var(--muted); }
+.lede { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 44rem; }
+.kpi-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)) minmax(0,1.35fr); gap: 16px; margin-bottom: 16px; }
+.kpi-l { font-size: 13px; color: var(--muted); }
+.kpi-v { font-family: 'Archivo', var(--font); font-stretch: 110%; font-weight: 600; font-size: 36px; line-height: 1; letter-spacing: -.02em; margin-top: 12px; }
+.kpi-v small { font-size: 18px; font-weight: 500; color: var(--muted); margin-left: 2px; }
+.kpi-card .tbar { margin-top: 22px; }
+.kpi-card .gap { font-size: 12.5px; color: var(--text); margin-top: 10px; line-height: 1.4; text-wrap: pretty; }
+.kpi-card .gap b { font-weight: 600; }
+.kpi-d { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.mrows { display: grid; gap: 14px; margin-top: 14px; }
+.mrow { display: grid; grid-template-columns: 112px minmax(0,1fr) 52px; gap: 12px; align-items: center; font-size: 13px; }
+.mrow .mv { text-align: right; font-variant-numeric: tabular-nums; }
+.row.main-row { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .row.main-row { grid-template-columns: minmax(0,1fr); }
 }
-/* Dark feature card stays the anchor: smoked glass instead of solid */
-.rank-card {
-  background: rgba(28,28,30,.94); border-color: rgba(255,255,255,.10);
-  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
-  box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.10);
+@media (max-width: 640px) {
+  .kpi-row { grid-template-columns: minmax(0,1fr); }
+  .page-head h1 { font-size: 28px; }
 }
-:root[data-theme="dark"] .rank-card { background: rgba(44,39,104,.95); border-color: rgba(255,255,255,.12); }
-.side { background: rgba(14,14,16,.97); border: 1px solid rgba(255,255,255,.06); box-shadow: 0 18px 44px rgba(0,0,0,.28); -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur); }
-:root[data-theme="dark"] .side { background: rgba(9,7,26,.96); border: 1px solid rgba(255,255,255,.07); box-shadow: 0 18px 44px rgba(0,0,0,.45); }
-
-/* Tables: let the glass through, keep the sticky header readable */
-.table-wrap { border-color: var(--glass-edge); background: var(--card-solid); }
-
-tbody td { background: transparent; }
-tbody td:first-child, thead th { background: var(--card-solid); }
-.prog-bar { background-color: rgba(255,255,255,.25); }
-:root[data-theme="dark"] .prog-bar { background-color: rgba(255,255,255,.03); }
-.toggle-btn, .preset-btn, .view-btn, .btn-dl, select, input[type="date"] { background-color: var(--glass-strong); border-color: var(--glass-edge); }
-.toggle-btn.active, .preset-btn.active { background: var(--pill-on-bg); }
-
-/* Chart cards and service scorecards: clear glass, so charts sit on the colour field. Tables and number cards stay frosted. */
-.card:has(.chart-wrap), .card:has(.gauge-wrap), .svc-card {
-  background: rgba(255,255,255,.10);
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
-  border-color: rgba(255,255,255,.55);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
-}
-:root[data-theme="dark"] .card:has(.chart-wrap), :root[data-theme="dark"] .card:has(.gauge-wrap), :root[data-theme="dark"] .svc-card {
-  background: rgba(30,27,72,.18); border-color: rgba(255,255,255,.10);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
-}
-
-/* Printing: no blur, plain white */
-@media print { body::before { display: none; } .card, .svc-card { backdrop-filter: none !important; } }
 </style>
 </head>
 <body data-tab="0">
@@ -1495,28 +1519,35 @@ function statusBadge(pct) {
   const cls = pct >= TARGET ? 'badge-green' : pct >= NEAR ? 'badge-amber' : 'badge-red';
   return `<span class="badge ${cls}">${pct.toFixed(1)}%</span>`;
 }
-function heroStat(label, pct, gap, key) {
+/* Thin bar with the 95% target as a ruled tick (spec section 10 signature) */
+function tbar(pct, fill, lbl = false) {
+  const w = pct === null || !isFinite(pct) ? 0 : Math.max(0, Math.min(100, pct));
+  return `<div class="tbar${lbl ? ' lbl' : ''}" role="img" aria-label="${pct === null ? '—' : fmt1(pct)}% against the ${TARGET}% target">`
+    + `<i style="width:${w}%${fill ? `;background:${fill}` : ''}"></i><b style="left:${TARGET}%"></b></div>`;
+}
+/* KPI card: figure in the text colour, status as icon/dot and word, bar with the target tick, one line on the gap */
+function kpiCard(label, pct, gap, key, extra = '') {
   const st = kpiStatus(pct);
   const ico = STATUS_ICON[st.cls];
-  // Start from the previous status so the icon can morph into the new one
-  const from = ico && morphReady() && lastStatus[key] ? lastStatus[key] : ico;
+  const from = ico && morphReady() && lastStatus[key] ? lastStatus[key] : ico;   // start from the previous status so the icon can morph
   const icon = ico ? `<morph-icon data-k="${key}" data-st="${ico}" data-from="${from}" size="13" stroke-width="2.2" spring="snappy">${miSvg(from)}</morph-icon>` : '';
-  return `<div class="hero-stat ${st.cls}"><div class="v">${fmt1(pct)}<small>%</small></div>
-    <span class="st-chip">${icon}${st.label}</span><div class="l">${label}</div><div class="gap">${gap}</div></div>`;
+  return `<div class="card kpi-card ${st.cls}"><div class="kpi-l">${label}</div>
+    <div class="kpi-v">${pct === null ? '—' : fmt1(pct) + '<small>%</small>'}</div>
+    <span class="st-chip">${icon}${st.label}</span>${tbar(pct, '', true)}
+    ${gap ? `<div class="gap">${gap}</div>` : ''}${extra}</div>`;
 }
-function heroNeutral(value, unit, label, hint = '') {
-  return `<div class="hero-stat neutral"><div class="v">${value}${unit ? `<small>${unit}</small>` : ''}</div>
-    <div class="l">${label}</div>${hint ? `<div class="gap">${hint}</div>` : ''}</div>`;
-}
-function progPill(label, right, pct, fill, fg, outline = false) {
-  const w = pct === null ? 0 : Math.max(0, Math.min(100, pct));
-  return `<div><div class="prog-lbl"><span>${label}</span><span>${right}</span></div>
-    <div class="prog-bar" title="${TARGET}% target marked">${pct === null
-      ? `<div style="width:0;min-width:0"></div>`
-      : `<div class="${outline ? 'outline' : ''}" style="width:${w}%;${outline ? '' : `background:${fill};color:${fg}`}">${pct.toFixed(1)}%</div>`}
-      <i style="left:${TARGET}%"></i></div></div>`;
+/* KPI card for a plain figure (no status, no target bar) */
+function figCard(label, value, unit, lines) {
+  return `<div class="card kpi-card"><div class="kpi-l">${label}</div>
+    <div class="kpi-v">${value}${unit ? `<small>${unit}</small>` : ''}</div>${lines.map(l => `<div class="kpi-d">${l}</div>`).join('')}</div>`;
 }
 const svcIcon = (key, cls = 'svc-ico') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${key}"/></svg>`;
+
+/* Section-10 tokens the kit's chart theme doesn't read: flat remainder fill, raised surface, Combined as a line */
+const applyKitTheme = applyChartTheme;
+applyChartTheme = function () { applyKitTheme(); THEME.non = cssVar('--non'); THEME.raised = cssVar('--raised'); THEME.combLine = cssVar('--comb-line'); };
+/* No glowing chart lines (spec section 10) */
+try { const glow = Chart.registry.plugins.get('lineGlow'); if (glow) Chart.unregister(glow); } catch (e) { /* chart library missing: the error banner reports it */ }
 
 /* Chart registry per tab; charts on hidden tabs are never built */
 /* Screen readers can't read a canvas: describe each chart from its card's title, subtitle and summary */
@@ -1574,43 +1605,34 @@ function renderOverview() {
   const monthEnd = ymd(new Date(+yr, +ym.slice(5), 0));
   const over = Math.round(sDay.rx - sDay.within);
 
-  const hero = `<div class="hero"><h1>Seen within 30 min,<br>latest day <span>${DOW_LONG[toD(latest).getDay()]} ${fmtDayY(latest)}</span></h1>
-    <div class="hero-stats">
-      ${heroStat(`Latest day · ${fmtDay(latest)}`, sDay.pct, `<b>${fmtN(over)}</b> of ${fmtN(sDay.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'day')}
-      ${heroStat(`Month to date · ${MON[+ym.slice(5) - 1]}`, sMtd.pct, gapText(sMtd, latest, monthEnd, MON[+ym.slice(5) - 1]), 'mtd')}
-      ${heroStat(`Year to date · ${yr}`, sYtd.pct, gapText(sYtd, latest, `${yr}-12-31`, yr), 'ytd')}
-    </div></div>`;
-
-  // Progress pills: each service on the latest day, then the selected range (outline = cumulative)
-  const svcDay = Object.fromEntries(data.service.filter(r => r.date === latest).map(r => [r.service, r]));
   const rows = rangeRows();
   const sR = stats(rows);
-  const prog = `<div class="prog-row">
-    ${SVC.map(s => progPill(s.label, fmtDay(latest), svcDay[s.key] ? svcDay[s.key].within_30min_pct : null, `var(${s.css})`, 'var(--svc-on)')).join('')}
-    ${progPill('All services · date filter', sR ? `${sR.days} days` : '—', sR ? sR.pct : null, '', '', true)}
-  </div>`;
+  const head = `<div class="page-head"><h1>Seen within 30 minutes <span>${DOW_LONG[toD(latest).getDay()]} ${fmtDayY(latest)}</span></h1>
+    <p class="lede">Share of patients at Farmasi Klinik Pakar 1 seen within ${TARGET_WAIT_MIN} minutes, against the ${TARGET}% target.</p></div>`;
+
+  // Latest day by service, and all services over the date filter, as thin bars with the target tick
+  const svcDay = Object.fromEntries(data.service.filter(r => r.date === latest).map(r => [r.service, r]));
+  const mrow = (lbl, pct, fill, tip) => `<div class="mrow"${tip ? ` title="${tip}"` : ''}><span>${lbl}</span>${tbar(pct, fill)}<span class="mv">${pct === null ? '—' : fmt1(pct) + '%'}</span></div>`;
+  const svcCard = `<div class="card kpi-card"><div class="card-title-row"><span class="kpi-l" style="color:var(--text);font-weight:500">${fmtDay(latest)} by service</span>${scopeTag('latest')}</div>
+    <div class="kpi-d">Within ${TARGET_WAIT_MIN} min · the tick marks ${TARGET}%</div>
+    <div class="mrows">${SVC.map(s => mrow(s.label, svcDay[s.key] ? svcDay[s.key].within_30min_pct : null, `var(${s.css})`)).join('')}
+      ${mrow('Date filter', sR ? sR.pct : null, 'var(--comb)', sR ? `All services, ${fmtRange(state.from, state.to)}` : '')}</div></div>`;
+  const kpis = `<div class="kpi-row">
+      ${kpiCard(`Latest day · ${fmtDay(latest)}`, sDay.pct, `<b>${fmtN(over)}</b> of ${fmtN(sDay.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'day')}
+      ${kpiCard(`Month to date · ${MON[+ym.slice(5) - 1]}`, sMtd.pct, gapText(sMtd, latest, monthEnd, MON[+ym.slice(5) - 1]), 'mtd')}
+      ${kpiCard(`Year to date · ${yr}`, sYtd.pct, gapText(sYtd, latest, `${yr}-12-31`, yr), 'ytd')}
+      ${svcCard}
+    </div>`;
 
   if (!sR) {
-    el.innerHTML = hero + prog + emptyCard('No days in this date range', `There's no queue data between ${fmtDayY(state.from)} and ${fmtDayY(state.to)}. Pick a wider range or reset the filters.`);
+    el.innerHTML = head + kpis + emptyCard('No days in this date range', `There's no queue data between ${fmtDayY(state.from)} and ${fmtDayY(state.to)}. Pick a wider range or reset the filters.`);
     return;
   }
 
-  // Gauge: selected range vs the same number of days just before it
+  // The selected range against the same number of days just before it (was the gauge's chip)
   const len = daysIn(state.from, state.to);
   const sPrev = stats(dailyBetween(addDays(state.from, -len), addDays(state.from, -1)));
-  const G_C = 2 * Math.PI * 46;
-  const ticks = Array.from({ length: 40 }, (_, i) => `<line x1="60" y1="4" x2="60" y2="7" stroke="var(--line)" stroke-width="1.4" transform="rotate(${i * 9} 60 60)"/>`).join('');
-  const chip = sPrev ? `<span class="neutral-chip">${sR.pct >= sPrev.pct ? '↗' : '↘'} ${fmtPts(sR.pct - sPrev.pct)} vs previous ${len} days</span>`
-                     : `<span class="neutral-chip">No earlier data to compare</span>`;
-  const gauge = `<div class="gauge-wrap"><svg viewBox="0 0 120 120" role="img" aria-label="${fmt1(sR.pct)}% within 30 minutes">
-      ${ticks}
-      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--line)" stroke-width="10"/>
-      <circle cx="60" cy="60" r="46" fill="none" stroke="var(--pj)" stroke-width="10" stroke-linecap="round"
-        stroke-dasharray="${(G_C * sR.pct / 100).toFixed(1)} ${G_C.toFixed(1)}" transform="rotate(-90 60 60)"/>
-      <line x1="60" y1="9" x2="60" y2="19" stroke="var(--text)" stroke-width="2" opacity=".5" transform="rotate(${TARGET * 3.6} 60 60)"/>
-      <text x="60" y="61" text-anchor="middle" style="font:800 19px 'Archivo', var(--font);font-stretch:112%;fill:var(--text)">${fmt1(sR.pct)}%</text>
-      <text x="60" y="76" text-anchor="middle" style="font:400 9px var(--font);fill:var(--muted)">target ${TARGET}%</text>
-    </svg>${chip}<div class="gauge-sub"><b>${sR.hit}</b> of ${sR.days} days on target · ${fmtN(sR.rx)} patients</div></div>`;
+  const vsPrev = sPrev ? ` (${fmtPts(sR.pct - sPrev.pct)} vs the ${len} days before)` : '';
 
   // Dark feature card: month to date vs the same days last month
   const [y, m, d] = latest.split('-').map(Number);
@@ -1654,14 +1676,12 @@ function renderOverview() {
   if (!state.month || !months.includes(state.month)) state.month = months[0];
   const monthSel = `<select id="bd-month" aria-label="Breakdown month">${months.map(mo => `<option value="${mo}"${mo === state.month ? ' selected' : ''}>${fmtMonth(mo)}</option>`).join('')}</select>`;
 
-  el.innerHTML = hero + prog + `
-    <div class="bento-3">
-      ${card({ title: 'Selected range', scope: 'range', meta: `${fmtRange(state.from, state.to)} · within 30 min`, body: gauge })}
-      ${card({ title: 'Last 7 days', scope: 'latest', meta: 'Within 30 min · latest day highlighted', body: chartBox('c-lolli', 222) })}
+  el.innerHTML = head + kpis + `
+    <div class="row main-row">
+      ${card({ title: 'Within 30 min, by day', scope: 'range', meta: `<b style="color:var(--text);font-weight:600">${fmt1(sR.pct)}%</b> over ${fmtRange(state.from, state.to)}${vsPrev} · ${sR.hit} of ${sR.days} days on target`,
+        actions: pngBtn('c-trend', 'within-30min-trend'), body: chartBox('c-trend', 330) + targetNote(`${TARGET}% target`) })}
       ${moCard}
     </div>
-    <div class="row row-1">${card({ title: 'Within 30 min, by day', scope: 'range', meta: `${sR.hit} of ${sR.days} days on target · ${fmtRange(state.from, state.to)}`,
-      actions: pngBtn('c-trend', 'within-30min-trend'), body: chartBox('c-trend', 300) + targetNote(`${TARGET}% target`) })}</div>
     <div class="row row-2">
       ${card({ title: 'Waiting time', scope: 'range', meta: 'Average and median, minutes', actions: pngBtn('c-wait', 'wait-trend'), body: chartBox('c-wait', 270) + targetNote(`${TARGET_WAIT_MIN}-min limit`) })}
       ${card({ title: 'Bil item', scope: 'range', meta: 'Items dispensed a day', actions: pngBtn('c-item', 'bil-item-trend'), body: chartBox('c-item', 270) + '<div class="chart-note">Days without an item count are left blank</div>' })}
@@ -1672,21 +1692,6 @@ function renderOverview() {
   $('#bd-month').addEventListener('change', e => { state.month = e.target.value; renderBreakdown(); });
   renderBreakdown();
 
-  // Lollipop: last 7 days
-  const last7 = D.slice(-7), lv = last7.map(r => r.within_30min_pct), li = lv.length - 1;
-  const lLabels = last7.map(r => `${dowOf(r.date)} ${+r.date.slice(8)}`);
-  mk(0, 'c-lolli', {
-    type: 'bar',
-    data: { labels: lLabels, datasets: [
-      { data: lv.map((v, i) => i === li ? null : v), backgroundColor: THEME.text, barThickness: 5, grouped: false, borderRadius: 999, borderSkipped: false },
-      { data: lv.map((v, i) => i === li ? v : null), backgroundColor: THEME.pj, barThickness: 12, grouped: false, borderRadius: 999, borderSkipped: false },
-      targetLine(lLabels) ] },
-    options: baseOpts({ layout: { padding: { top: 26 } }, scales: { y: { display: false, min: pctFloor(lv), max: 100 }, x: { grid: { display: false }, border: { display: false }, ticks: TICKS } } },
-      { legend: { display: false }, tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget && i.raw !== null, callbacks: { label: c => ` ${c.parsed.y.toFixed(1)}% within 30 min` } },
-        datalabels: { display: c => c.datasetIndex === 1 && c.dataIndex === li, anchor: 'end', align: 'top', offset: 4,
-          backgroundColor: THEME.pj, color: THEME.onPj, borderRadius: 999, padding: { top: 3, bottom: 3, left: 8, right: 8 }, formatter: v => v.toFixed(1) + '%' } })
-  });
-
   // Trend
   const labels = rows.map(r => fmtDay(r.date));
   const pct = rows.map(r => r.within_30min_pct);
@@ -1696,7 +1701,7 @@ function renderOverview() {
     data: { labels, datasets: [lineSeries('Within 30 min %', pct, THEME.mb, cT), targetLine(labels)] },
     options: baseOpts({ scales: { y: yPct(pctFloor(pct)), x: xDays() } },
       { legend: { display: false }, tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { title: it => fmtDayY(rows[it[0].dataIndex].date) + ' · ' + dowOf(rows[it[0].dataIndex].date) } },
-        datalabels: { ...DL.linePct, ...dipAwareLabels, display: c => showLabels && fewForLabels(rows.length) && !c.dataset.isTarget } })
+        datalabels: { ...DL.linePct, ...dipAwareLabels, display: c => showLabels && fewForLabels(rows.length) && !c.dataset.isTarget ? 'auto' : false } })
   });
 
   // Waiting time
@@ -1709,7 +1714,7 @@ function renderOverview() {
       targetLine(labels, TARGET_WAIT_MIN, `${TARGET_WAIT_MIN}-min limit`) ] },
     options: baseOpts({ scales: { y: { min: 0, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 6, callback: v => v + 'm' } }, x: xDays() } },
       { legend: legendTopRight(), tooltip: { ...TOOLTIP, filter: i => !i.dataset.isTarget, callbacks: { label: c => ` ${c.dataset.label}: ${fmt1(c.parsed.y)} min` } },
-        datalabels: { ...DL.line, display: c => showLabels && fewForLabels(rows.length) && c.datasetIndex === 0, formatter: v => fmt1(v) } })
+        datalabels: { ...DL.line, display: c => showLabels && fewForLabels(rows.length) && c.datasetIndex === 0 ? 'auto' : false, formatter: v => fmt1(v) } })
   });
 
   // Bil item
@@ -1778,16 +1783,17 @@ function renderDaily() {
       <span class="range-info">Shows one day · the date filter doesn't apply here</span>
     </div>`;
 
-  const hero = `<div class="hero"><h1>Daily operations,<br>${DOW_LONG[toD(date).getDay()]} <span>${fmtDayY(date)}</span></h1>
-    <div class="hero-stats">
-      ${heroStat('Within 30 min', st.pct, `<b>${fmtN(over)}</b> of ${fmtN(st.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'daily')}
-      ${heroNeutral(fmt1(day.avg_wait_min), 'min', 'Average wait', `Median ${fmt1(day.median_wait_min)} min`)}
-      ${heroNeutral(peak.t ? fmtN(peak.v) : '—', '', 'Peak queue', peak.t ? `At ${peak.t} · ${fmtN(st.rx)} Rx · ${day.n_item ? fmtN(day.n_item) + ' items' : 'items not entered'}` : 'No intraday data')}
-    </div></div>
-    <div class="hero-note">Staff on duty: <b>${staff || '—'}</b>${staff ? ` · PF ${day.n_PF} · PRP ${day.n_PRP} · PPF ${day.n_PPF}` : ''}</div>`;
+  const hero = `<div class="page-head"><h1>Daily operations <span>${DOW_LONG[toD(date).getDay()]} ${fmtDayY(date)}</span></h1>
+    <p class="lede">How the queue and waiting time moved through the day, and how many patients were seen within ${TARGET_WAIT_MIN} minutes.</p></div>
+    <div class="kpi-row">
+      ${kpiCard('Within 30 min', st.pct, `<b>${fmtN(over)}</b> of ${fmtN(st.rx)} patients waited over ${TARGET_WAIT_MIN} min`, 'daily')}
+      ${figCard('Average wait', fmt1(day.avg_wait_min), 'min', [`Median ${fmt1(day.median_wait_min)} min`, `Limit ${TARGET_WAIT_MIN} min`])}
+      ${figCard('Peak queue', peak.t ? fmtN(peak.v) : '—', peak.t ? 'patients' : '', peak.t ? [`At ${peak.t}`, `${fmtN(st.rx)} Rx · ${day.n_item ? fmtN(day.n_item) + ' items' : 'items not entered'}`] : ['No intraday data'])}
+      ${figCard('Staff on duty', staff || '—', '', staff ? [`PF ${day.n_PF} · PRP ${day.n_PRP} · PPF ${day.n_PPF}`] : ['Not entered'])}
+    </div>`;
 
   const wd = data.wd.find(r => r.date === date);
-  const wdBody = wd ? chartBox('c-dist', 210) + `<div class="chart-note">Solid: within ${TARGET_WAIT_MIN} min · hatched: over ${TARGET_WAIT_MIN} min</div>
+  const wdBody = wd ? chartBox('c-dist', 210) + `<div class="chart-note">Dark: within ${TARGET_WAIT_MIN} min · light: over ${TARGET_WAIT_MIN} min</div>
       <div class="table-wrap short" style="margin-top:12px"><table id="t-dist"><thead><tr><th></th>${WD_BUCKETS.map(([, l]) => `<th class="num">${l}</th>`).join('')}<th class="num">Total</th></tr></thead>
       <tbody><tr><td>Patients</td>${WD_BUCKETS.map(([k]) => `<td class="num">${fmtN(wd[k])}</td>`).join('')}<td class="num">${fmtN(wd.total)}</td></tr>
       <tr><td>Share</td>${WD_BUCKETS.map(([k]) => `<td class="num">${wd[k + 'p'].toFixed(1)}%</td>`).join('')}<td class="num">100%</td></tr></tbody></table></div>`
@@ -1803,7 +1809,7 @@ function renderDaily() {
           <div class="strip"><div class="strip-label"><b><i style="background:var(--mb)"></i>Average wait</b><span>minutes · dashed = ${TARGET_WAIT_MIN}-min limit</span></div>${chartBox('c-wait-day', 150)}</div>
           <div class="strip"><div class="strip-label"><b><i style="background:var(--comb)"></i>Within 30 min</b><span>share so far today · dashed = ${TARGET}% target</span></div>${chartBox('c-cum', 175)}</div>
         </div>
-        <div class="chart-note">Hatched: lunch break · grey band: slots where the average wait was over ${TARGET_WAIT_MIN} min</div>`
+        <div class="chart-note">Shaded: lunch break · grey band: slots where the average wait was over ${TARGET_WAIT_MIN} min</div>`
         : `<div class="chart-empty" style="height:200px">No intraday data for ${fmtDayY(date)}.</div>` })}</div>
     <div class="row row-2">
       ${card({ title: 'Busier days and the 30-minute target', scope: 'all',
@@ -1822,7 +1828,6 @@ function renderDaily() {
     // Lunch break: Mon–Thu 12:00–14:00, Fri 12:15–14:45
     const dow = toD(date).getDay();
     const lunch = dow >= 1 && dow <= 4 ? [720, 840, 'Lunch'] : dow === 5 ? [735, 885, 'Lunch (Fri)'] : null;
-    const hatch = hatchPattern();
     const lunchShade = {
       id: 'lunchShade',
       beforeDatasetsDraw(chart) {
@@ -1833,7 +1838,7 @@ function renderDaily() {
         const x0 = x.getPixelForValue(0), x1 = x.getPixelForValue(INTRADAY_BUCKETS.length - 1);
         const xs = x0 + (lunch[0] - f) / (l - f) * (x1 - x0), xe = x0 + (lunch[1] - f) / (l - f) * (x1 - x0);
         ctx.save();
-        ctx.globalAlpha = .55; ctx.fillStyle = hatch; ctx.fillRect(xs, a.top, xe - xs, a.bottom - a.top);
+        ctx.fillStyle = THEME.non; ctx.fillRect(xs, a.top, xe - xs, a.bottom - a.top);
         // Label it once: stacked strips set plugins.lunchShade.label = false on all but the top one
         if ((chart.options.plugins.lunchShade || {}).label !== false) {
           ctx.globalAlpha = 1; ctx.fillStyle = THEME.muted; ctx.font = "500 11px 'Outfit', sans-serif"; ctx.textAlign = 'center';
@@ -1848,12 +1853,10 @@ function renderDaily() {
 
   if (wd) {
     const vals = WD_BUCKETS.map(([k]) => wd[k]);
-    const hatch = hatchPattern();
     mk(1, 'c-dist', {
       type: 'bar',
       data: { labels: WD_BUCKETS.map(([, l]) => l), datasets: [{ label: 'Patients', data: vals,
-        backgroundColor: WD_BUCKETS.map((_, i) => i < 3 ? THEME.mb : hatch),
-        borderColor: WD_BUCKETS.map((_, i) => i < 3 ? THEME.mb : THEME.hatch), borderWidth: WD_BUCKETS.map((_, i) => i < 3 ? 0 : 1),
+        backgroundColor: WD_BUCKETS.map((_, i) => i < 3 ? THEME.mb : THEME.non), borderWidth: 0,
         borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, maxBarThickness: 40 }] },
       options: baseOpts({ layout: { padding: { top: 20 } }, scales: { y: { min: 0, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 5 } },
           x: { grid: { display: false }, border: { display: false }, ticks: TICKS, title: { display: true, text: 'minutes waited', color: THEME.muted, font: { size: 11 } } } } },
@@ -1921,7 +1924,7 @@ function renderIntradayStrips(byB, lunchShade, date) {
         pointRadius: 3, pointBackgroundColor: THEME.cardSolid, pointBorderColor: THEME.mb, pointBorderWidth: 2 },
       targetLine(B, TARGET_WAIT_MIN, `${TARGET_WAIT_MIN}-min limit`) ] },
     options: opts({ x: xOpts(false), y: { min: 0, suggestedMax: TARGET_WAIT_MIN + 10, grid: GRID, border: { display: false }, ticks: { ...TICKS, maxTicksLimit: 4, callback: v => v + 'm' }, ...fixAxis } },
-      { ...lbl, display: c => showLabels && c.datasetIndex === 0 && has(W[c.dataIndex]) && (over[c.dataIndex] || c.dataIndex === hover), formatter: v => Math.round(v) + 'm' })
+      { ...lbl, display: c => showLabels && c.datasetIndex === 0 && has(W[c.dataIndex]) && (over[c.dataIndex] || c.dataIndex === hover) ? 'auto' : false, formatter: v => Math.round(v) + 'm' })
   });
   mk(1, 'c-cum', {
     type: 'line', plugins: [lunchShade, crosshair],
@@ -2076,17 +2079,6 @@ function svcStats(rows) {
     medWait: mean(rows.map(r => r.median_wait_min)),
   };
 }
-function spark(values) {
-  const v = values.filter(x => x !== null && isFinite(x));
-  if (v.length < 2) return '';
-  const lo = Math.min(...v), hi = Math.max(...v), span = hi - lo || 1;
-  const pts = values.map((x, i) => x === null ? null : [i / (values.length - 1) * 100, 26 - (x - lo) / span * 24]).filter(Boolean);
-  const line = pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
-  return `<svg class="svc-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
-    <polygon class="spark-area" points="${pts[0][0].toFixed(1)},28 ${line} ${pts[pts.length - 1][0].toFixed(1)},28"/>
-    <polyline points="${line}" vector-effect="non-scaling-stroke"/></svg>`;
-}
-
 function renderServices() {
   const el = $('#panel-2');
   renderDock();
@@ -2118,7 +2110,6 @@ function renderServices() {
           ${d === null ? '<span class="kpi-pill pill-gray">no earlier data</span>' : `<span class="kpi-pill ${Math.abs(d) < .05 ? 'pill-gray' : d > 0 ? 'pill-green' : 'pill-red'}" title="vs previous ${len} days">${d >= 0 ? '▲' : '▼'} ${Math.abs(d).toFixed(1)} pts</span>`}
           <span class="kpi-pill pill-gray">avg ${fmt1(st.avgWait)} min</span>
         </div>
-        ${spark(dates.map(dt => byKey[s.key][dt] ? byKey[s.key][dt].within_30min_pct : null))}
       </div>`; }).join('')}</div>`;
 
   const tableRows = sel.filter(s => S[s.key]).map(s => { const st = S[s.key]; return `<tr><td><span class="svc-cell">${svcIcon(s.key)}${s.label}</span></td>
